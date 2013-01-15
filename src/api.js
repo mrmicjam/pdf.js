@@ -660,7 +660,7 @@ var WorkerTransport = (function WorkerTransportClosure() {
           var buf = new Uint8Array(size * components);
           var tmpCanvas = createScratchCanvas(width, height);
           var tmpCtx = tmpCanvas.getContext('2d');
-          tmpCtx.drawImage(img, 0, 0);
+          //tmpCtx.drawImage(img, 0, 0);
           var data = tmpCtx.getImageData(0, 0, width, height).data;
 
           if (components == 3) {

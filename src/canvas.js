@@ -1232,6 +1232,8 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
     paintFormXObjectBegin: function CanvasGraphics_paintFormXObjectBegin(matrix,
                                                                         bbox) {
+      // jon -- remove images 
+      /*
       this.save();
       this.current.paintFormXObjectDepth++;
 
@@ -1245,18 +1247,24 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         this.clip();
         this.endPath();
       }
+      */
     },
 
     paintFormXObjectEnd: function CanvasGraphics_paintFormXObjectEnd() {
+      // jon -- remove images
+      /*
       var depth = this.current.paintFormXObjectDepth;
       do {
         this.restore();
         // some pdf don't close all restores inside object
         // closing those for them
       } while (this.current.paintFormXObjectDepth >= depth);
+      */
     },
 
     paintJpegXObject: function CanvasGraphics_paintJpegXObject(objId, w, h) {
+      // jon -- remove images
+      /*
       var domImage = this.objs.get(objId);
       if (!domImage) {
         error('Dependent image isn\'t ready yet');
@@ -1268,14 +1276,18 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       // scale the image to the unit square
       ctx.scale(1 / w, -1 / h);
 
-      ctx.drawImage(domImage, 0, 0, domImage.width, domImage.height,
-                    0, -h, w, h);
+      
+      //ctx.drawImage(domImage, 0, 0, domImage.width, domImage.height,
+      //              0, -h, w, h);
 
       this.restore();
+      */
     },
 
     paintImageMaskXObject: function CanvasGraphics_paintImageMaskXObject(
                              imgArray, inverseDecode, width, height) {
+      // jon -- remove images
+      /*
       var ctx = this.ctx;
       var tmpCanvas = createScratchCanvas(width, height);
       var tmpCtx = tmpCanvas.getContext('2d');
@@ -1292,11 +1304,14 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       applyStencilMask(imgArray, width, height, inverseDecode, pixels);
 
       this.paintInlineImageXObject(imgData);
+      */
     },
 
     paintImageMaskXObjectGroup:
       function CanvasGraphics_paintImageMaskXObjectGroup(images) {
       var ctx = this.ctx;
+      // jon -- remove images
+      /*
       var tmpCanvasWidth = 0, tmpCanvasHeight = 0, tmpCanvas, tmpCtx;
       for (var i = 0, ii = images.length; i < ii; i++) {
         var image = images[i];
@@ -1322,20 +1337,25 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         tmpCtx.putImageData(imgData, 0, 0);
 
         ctx.save();
+
         ctx.transform.apply(ctx, image.transform);
         ctx.scale(1, -1);
-        ctx.drawImage(tmpCanvas, 0, 0, w, h,
-                      0, -1, 1, 1);
+        //ctx.drawImage(tmpCanvas, 0, 0, w, h,
+        //              0, -1, 1, 1);
         ctx.restore();
       }
+      */
     },
 
     paintImageXObject: function CanvasGraphics_paintImageXObject(objId) {
+      // jon -- remove images
+      /*
       var imgData = this.objs.get(objId);
       if (!imgData)
         error('Dependent image isn\'t ready yet');
 
       this.paintInlineImageXObject(imgData);
+      */
     },
 
     paintInlineImageXObject:
@@ -1343,6 +1363,8 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var width = imgData.width;
       var height = imgData.height;
       var ctx = this.ctx;
+      // jon -- remove images
+      /*
       this.save();
       // scale the image to the unit square
       ctx.scale(1 / width, -1 / height);
@@ -1359,17 +1381,18 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         tmpCanvas = prescaleImage(imgData.data,
                                  width, height,
                                  widthScale, heightScale);
-        ctx.drawImage(tmpCanvas, 0, 0, tmpCanvas.width, tmpCanvas.height,
-                                 0, -height, width, height);
+        //ctx.drawImage(tmpCanvas, 0, 0, tmpCanvas.width, tmpCanvas.height,
+        //                         0, -height, width, height);
       } else {
         if (typeof ImageData !== 'undefined' && imgData instanceof ImageData) {
           tmpCtx.putImageData(imgData, 0, 0);
         } else {
           putBinaryImageData(tmpCtx, imgData.data, width, height);
         }
-        ctx.drawImage(tmpCanvas, 0, -height);
+        //ctx.drawImage(tmpCanvas, 0, -height);
       }
       this.restore();
+      */
     },
 
     paintInlineImageXObjectGroup:
@@ -1378,6 +1401,8 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var w = imgData.width;
       var h = imgData.height;
 
+      // jon -- remove images
+      /*
       var tmpCanvas = createScratchCanvas(w, h);
       var tmpCtx = tmpCanvas.getContext('2d');
       putBinaryImageData(tmpCtx, imgData.data, w, h);
@@ -1387,10 +1412,11 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         ctx.save();
         ctx.transform.apply(ctx, entry.transform);
         ctx.scale(1, -1);
-        ctx.drawImage(tmpCanvas, entry.x, entry.y, entry.w, entry.h,
-                      0, -1, 1, 1);
+        //ctx.drawImage(tmpCanvas, entry.x, entry.y, entry.w, entry.h,
+        //              0, -1, 1, 1);
         ctx.restore();
       }
+      */
     },
 
     // Marked content
