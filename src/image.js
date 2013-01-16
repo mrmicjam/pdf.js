@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+//TODO: references - window: 1, document: 0
+
 'use strict';
 
 var PDFImage = (function PDFImageClosure() {
@@ -458,6 +460,7 @@ function loadJpegStream(id, imageData, objs) {
   img.onload = (function loadJpegStream_onloadClosure() {
     objs.resolve(id, img);
   });
+  //TODO: bat change the way we do encoding here
   img.src = 'data:image/jpeg;base64,' + window.btoa(imageData);
 }
 

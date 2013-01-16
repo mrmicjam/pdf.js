@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+//TODO: references - window: ?, document: ?
+
 'use strict';
 
 // Unicode Private Use Area

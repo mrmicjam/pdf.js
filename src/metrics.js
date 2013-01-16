@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+//TODO: references - window: 0, document: 0
+
 'use strict';
 
 // The Metrics object contains glyph widths (in glyph space units).

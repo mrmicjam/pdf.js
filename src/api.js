@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+//TODO: references - window: 1, document: 0
+
  'use strict';
 
 /**
@@ -675,6 +677,8 @@ var WorkerTransport = (function WorkerTransportClosure() {
           }
           promise.resolve({ data: buf, width: width, height: height});
         }).bind(this);
+        // TODO: bat Use buffers for this encoding
+        // http://stackoverflow.com/questions/6182315/how-to-do-base64-encoding-in-node-js
         var src = 'data:image/jpeg;base64,' + window.btoa(imageData);
         img.src = src;
       });
