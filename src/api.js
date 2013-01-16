@@ -302,7 +302,6 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
         }.bind(this),
         function pageDisplayReadPromiseError(reason) {
           complete(reason);
-
         }
       );
 
@@ -365,7 +364,6 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
      */
     display: function PDFPageProxy_display(gfx, viewport, callback,
                                            continueCallback) {
-      globalScope['StepperManager'].enabled = false;
       var stats = this.stats;
       stats.time('Rendering');
 
