@@ -1363,11 +1363,14 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       ctx.scale(1 / w, -1 / h);
       this.cdi.push('ctx.scale(' + (1 / w) + ', ' + (-1 / h) + ');');
 
-      // TODO: bat Fix images!
-      ctx.drawImage(domImage, 0, 0, domImage.width, domImage.height,
-                    0, -h, w, h);
+      // jon -- remove images, replace with black rectangle
+      //ctx.drawImage(domImage, 0, 0, domImage.width, domImage.height,
+      //              0, -h, w, h);
+      ctx.fillStyle = "rgb(0, 0, 0)";
+      ctx.fillRect(0, -h, w, h);
 
       this.restore();
+      
     },
 
     paintImageMaskXObject: function CanvasGraphics_paintImageMaskXObject(
@@ -1423,9 +1426,11 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         this.cdi.push('ctx.transform.apply(ctx, ' + image.transform + ');');
         ctx.scale(1, -1);
         this.cdi.push('ctx.scale(1, -1);');
-        //TODO: bat draw IMAGER!
-        ctx.drawImage(tmpCanvas, 0, 0, w, h,
-                      0, -1, 1, 1);
+        // jon -- remove images, replace with black rectangle
+        //ctx.drawImage(tmpCanvas, 0, 0, w, h,
+        //              0, -1, 1, 1);
+        ctx.fillStyle = "rgb(0, 0, 0)";
+        ctx.fillRect(0, -1, 1, 1);
         ctx.restore();
         this.cdi.push('ctx.restore();');
       }
@@ -1444,6 +1449,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var width = imgData.width;
       var height = imgData.height;
       var ctx = this.ctx;
+
       this.save();
       // scale the image to the unit square
       ctx.scale(1 / width, -1 / height);
@@ -1458,20 +1464,24 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       if (widthScale > 2 || heightScale > 2) {
         // canvas does not resize well large images to small -- using simple
         // algorithm to perform pre-scaling
-        tmpCanvas = prescaleImage(imgData.data,
-                                 width, height,
-                                 widthScale, heightScale);
-        // TODO: bat IMAGE THING!
-        ctx.drawImage(tmpCanvas, 0, 0, tmpCanvas.width, tmpCanvas.height,
-                                 0, -height, width, height);
+        // jon -- remove images, replace with black rectangle
+        //tmpCanvas = prescaleImage(imgData.data,
+        //                         width, height,
+        //                         widthScale, heightScale);
+        //ctx.drawImage(tmpCanvas, 0, 0, tmpCanvas.width, tmpCanvas.height,
+        //                         0, -height, width, height);
+        ctx.fillStyle = "rgb(0, 0, 0)";
+        ctx.fillRect(0, -height, width, height);
       } else {
         if (typeof ImageData !== 'undefined' && imgData instanceof ImageData) {
           tmpCtx.putImageData(imgData, 0, 0);
         } else {
           putBinaryImageData(tmpCtx, imgData.data, width, height);
         }
-        // TODO: bat IMAGE THING!
-        ctx.drawImage(tmpCanvas, 0, -height);
+        // jon -- remove images, replace with black rectangle
+        //ctx.drawImage(tmpCanvas, 0, -height);
+        ctx.fillStyle = "rgb(0, 0, 0)";
+        ctx.fillRect(0, 0, width, height);
       }
       this.restore();
     },
@@ -1494,9 +1504,11 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         this.cdi.push('ctx.transform.apply(ctx, ' + entry.transform + ');');
         ctx.scale(1, -1);
         this.cdi.push('ctx.scale(1, -1);');
-        //TODO: bat IMAGE THINGS
-        ctx.drawImage(tmpCanvas, entry.x, entry.y, entry.w, entry.h,
-                      0, -1, 1, 1);
+        // jon -- remove images, replace with black rectangle
+        //ctx.drawImage(tmpCanvas, entry.x, entry.y, entry.w, entry.h,
+        //              0, -1, 1, 1);
+        ctx.fillStyle = "rgb(0, 0, 0)";
+        ctx.fillRect(0, -1, 1, 1);
         ctx.restore();
         this.cdi.push('ctx.restore();');
       }
