@@ -1379,6 +1379,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         } else {
           putBinaryImageData(tmpCtx, imgData.data, width, height);
         }
+        // jon -- remove images, replace with black rectangle
         //ctx.drawImage(tmpCanvas, 0, -height);
         ctx.fillStyle = "rgb(0, 0, 0)";
         ctx.fillRect(0, 0, width, height);
