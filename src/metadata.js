@@ -19,7 +19,7 @@
 
 'use strict';
 
-xml2js = require('xml2js');
+var xml2js = require('xml2js');
 
 var Metadata = PDFJS.Metadata = (function MetadataClosure() {
   function fixMetadata(meta) {
