@@ -588,31 +588,31 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     transform: function CanvasGraphics_transform(a, b, c, d, e, f) {
       this.ctx.transform(a, b, c, d, e, f);
       this.cdi.push('ctx.transform(' + a + ', ' + b + ', ' + c + ', ' + d +
-        ', ' + e + ', ' + f + ' );');
+        ', ' + e + ', ' + f + ');');
     },
 
     // Path
     moveTo: function CanvasGraphics_moveTo(x, y) {
       this.ctx.moveTo(x, y);
-      this.cdi.push('ctx.moveTo(' + x + ', ' + y + ' );');
+      this.cdi.push('ctx.moveTo(' + x + ', ' + y + ');');
       this.current.setCurrentPoint(x, y);
     },
     lineTo: function CanvasGraphics_lineTo(x, y) {
       this.ctx.lineTo(x, y);
-      this.cdi.push('ctx.lineTo(' + x + ', ' + y + ' );');
+      this.cdi.push('ctx.lineTo(' + x + ', ' + y + ');');
       this.current.setCurrentPoint(x, y);
     },
     curveTo: function CanvasGraphics_curveTo(x1, y1, x2, y2, x3, y3) {
       this.ctx.bezierCurveTo(x1, y1, x2, y2, x3, y3);
       this.cdi.push('bezierCurveTo(' + x1 + ', ' + y1 + ', ' + x2 + ', ' +
-        y2 + ', ' + x3 + ', ' + y3 + ' );');
+        y2 + ', ' + x3 + ', ' + y3 + ');');
       this.current.setCurrentPoint(x3, y3);
     },
     curveTo2: function CanvasGraphics_curveTo2(x2, y2, x3, y3) {
       var current = this.current;
       this.ctx.bezierCurveTo(current.x, current.y, x2, y2, x3, y3);
       this.cdi.push('bezierCurveTo(' + current.x + ', ' + current.y + ', ' +
-        x2 + ', ' + y2 + ', ' + x3 + ', ' + y3 + ' );');
+        x2 + ', ' + y2 + ', ' + x3 + ', ' + y3 + ');');
       current.setCurrentPoint(x3, y3);
     },
     curveTo3: function CanvasGraphics_curveTo3(x1, y1, x3, y3) {
@@ -626,7 +626,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     rectangle: function CanvasGraphics_rectangle(x, y, width, height) {
       this.ctx.rect(x, y, width, height);
       this.cdi.push('ctx.rect(' + x + ', ' + y + ', ' + width + ', ' +
-        height + ' );');
+        height + ');');
     },
     stroke: function CanvasGraphics_stroke(consumePath) {
       consumePath = typeof consumePath !== 'undefined' ? consumePath : true;
@@ -778,7 +778,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var data = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
       this.textClipLayers.imageData = data;
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-      this.cdi.push('ctx.clearRect(0, 0, ' + canvasWidth, + ', ' + canvasHeight + ' );');
+      this.cdi.push('ctx.clearRect(0, 0, ' + canvasWidth, + ', ' + canvasHeight + ');');
       ctx.restore();
       this.cdi.push('ctx.restore();');
     },
@@ -894,9 +894,9 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var ctx = this.ctx;
       var current = this.current;
       ctx.transform.apply(ctx, current.textMatrix);
-      this.cdi.push('ctx.transform.apply(ctx, ' + current.textMatrix + ' );');
+      this.cdi.push('ctx.transform.apply(ctx, ' + current.textMatrix + ');');
       ctx.translate(current.x, current.y + current.textRise);
-      this.cdi.push('ctx.translate(' + current.x + ', ' + current.y + current.textRise + ' );');
+      this.cdi.push('ctx.translate(' + current.x + ', ' + current.y + current.textRise + ');');
       if (current.fontDirection > 0) {
         ctx.scale(current.textHScale, -1);
         this.cdi.push('ctx.scale(' + current.textHScale + ', -1);');
@@ -948,9 +948,9 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         ctx.save();
         this.cdi.push('ctx.save();');
         ctx.transform.apply(ctx, current.textMatrix);
-        this.cdi.push('ctx.transform.apply(ctx, ' + current.textMatrix + ' );');
+        this.cdi.push('ctx.transform.apply(ctx, ' + current.textMatrix + ');');
         ctx.translate(current.x, current.y);
-        this.cdi.push('ctx.translate(' + current.x + ', ' + current.y + ' );');
+        this.cdi.push('ctx.translate(' + current.x + ', ' + current.y + ');');
 
         ctx.scale(textHScale, 1);
         this.cdi.push('ctx.scale(' + textHScale + ', 1);');
