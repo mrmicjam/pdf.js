@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+//TODO: references - window: 0, document: 0
+
 'use strict';
 
 // Use only for debugging purposes. This should not be used in any code that is

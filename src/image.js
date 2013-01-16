@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+//TODO: references - window: 0, document: 0
+
 'use strict';
 
 var PDFImage = (function PDFImageClosure() {
@@ -458,6 +460,18 @@ function loadJpegStream(id, imageData, objs) {
   img.onload = (function loadJpegStream_onloadClosure() {
     objs.resolve(id, img);
   });
-  img.src = 'data:image/jpeg;base64,' + window.btoa(imageData);
+  // http://stackoverflow.com/questions/6182315/how-to-do-base64-encoding-in-node-js
+  var src;
+  if (typeof window !== 'undefined') {
+    // in a window use the window encode
+    src = 'data:image/jpeg;base64,' + window.btoa(imageData);
+  }
+  else if (typeof Buffer !== 'undefined') {
+    // on Node use the node encode
+    src = 'data:image/jpeg;base64,' + new Buffer(imageData).toString('base64');
+  }
+  else
+    console.log("err0r3d!");
+  img.src = src;
 }
 

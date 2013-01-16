@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+//TODO: references - window: 0, document: 1
+
 'use strict';
 
 // <canvas> contexts store most of the state we need natively.
@@ -36,6 +38,7 @@ var TextRenderingMode = {
 var MIN_FONT_SIZE = 1;
 
 function createScratchCanvas(width, height) {
+  // TODO: bat remove this when we go to node
   var canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
