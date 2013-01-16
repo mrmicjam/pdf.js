@@ -293,10 +293,12 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
             return;
           }
 
+          var canvasDrawInstructions = new Array();
           var gfx = new CanvasGraphics(params.canvasContext, this.commonObjs,
-            this.objs, params.textLayer);
+            this.objs, params.textLayer, canvasDrawInstructions);
           try {
             this.display(gfx, params.viewport, complete, continueCallback);
+            alert(canvasDrawInstructions);
           } catch (e) {
             complete(e);
           }
