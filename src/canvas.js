@@ -395,7 +395,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       this.ctx.save();
       this.cdi.push('ctx.save();');
       this.ctx.transform.apply(this.ctx, transform);
-      this.cdi.push('ctx.transform.apply(ctx, ' + transform + ');');
+      this.cdi.push('ctx.transform.apply(ctx, [' + transform + ']);');
 
       if (this.textLayer)
         this.textLayer.beginLayout();
@@ -864,7 +864,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
       var rule = italic + ' ' + bold + ' ' + browserFontSize + 'px ' + typeface;
       this.ctx.font = rule;
-      this.cdi.push('ctx.font = ' + rule + ';');
+      this.cdi.push("ctx.font = '" + rule + "';");
     },
     setTextRenderingMode: function CanvasGraphics_setTextRenderingMode(mode) {
       this.current.textRenderingMode = mode;
@@ -893,7 +893,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var ctx = this.ctx;
       var current = this.current;
       ctx.transform.apply(ctx, current.textMatrix);
-      this.cdi.push('ctx.transform.apply(ctx, ' + current.textMatrix + ');');
+      this.cdi.push('ctx.transform.apply(ctx, [' + current.textMatrix + ']);');
       ctx.translate(current.x, current.y + current.textRise);
       this.cdi.push('ctx.translate(' + current.x + ', ' + current.y + current.textRise + ');');
       if (current.fontDirection > 0) {
@@ -947,7 +947,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         ctx.save();
         this.cdi.push('ctx.save();');
         ctx.transform.apply(ctx, current.textMatrix);
-        this.cdi.push('ctx.transform.apply(ctx, ' + current.textMatrix + ');');
+        this.cdi.push('ctx.transform.apply(ctx, [' + current.textMatrix + ']);');
         ctx.translate(current.x, current.y);
         this.cdi.push('ctx.translate(' + current.x + ', ' + current.y + ');');
 
@@ -976,7 +976,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
           ctx.scale(fontSize, fontSize);
           this.cdi.push('ctx.scale(' + fontSize + ', ' + fontSize + ');');
           ctx.transform.apply(ctx, fontMatrix);
-          this.cdi.push('ctx.transform.apply(' + ctx + ', ' + fontMatrix + ');');
+          this.cdi.push('ctx.transform.apply(ctx, [' + fontMatrix + ']);');
           this.executeOperatorList(glyph.operatorList);
           this.restore();
 
@@ -1037,19 +1037,19 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
               case TextRenderingMode.FILL:
               case TextRenderingMode.FILL_ADD_TO_PATH:
                 ctx.fillText(character, scaledX, 0);
-                this.cdi.push('ctx.fillText(' + character + ', ' + scaledX + ', 0);');
+                this.cdi.push("ctx.fillText('" + character + "', " + scaledX + ", 0);");
                 break;
               case TextRenderingMode.STROKE:
               case TextRenderingMode.STROKE_ADD_TO_PATH:
                 ctx.strokeText(character, scaledX, 0);
-                this.cdi.push('ctx.strokeText(' + character + ', ' + scaledX + ', 0);');
+                this.cdi.push("ctx.strokeText('" + character + "', " + scaledX + ", 0);");
                 break;
               case TextRenderingMode.FILL_STROKE:
               case TextRenderingMode.FILL_STROKE_ADD_TO_PATH:
                 ctx.fillText(character, scaledX, 0);
-                this.cdi.push('ctx.fillText(' + character + ', ' + scaledX + ', 0);');
+                this.cdi.push("ctx.fillText('" + character + "', " + scaledX + ", 0);");
                 ctx.strokeText(character, scaledX, 0);
-                this.cdi.push('ctx.strokeText(' + character + ', ' + scaledX + ', 0);');
+                this.cdi.push("ctx.strokeText('" + character + "', " + scaledX + ", 0);");
                 break;
               case TextRenderingMode.INVISIBLE:
               case TextRenderingMode.ADD_TO_PATH:
@@ -1422,7 +1422,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         ctx.save();
         this.cdi.push('ctx.save();');
         ctx.transform.apply(ctx, image.transform);
-        this.cdi.push('ctx.transform.apply(ctx, ' + image.transform + ');');
+        this.cdi.push('ctx.transform.apply(ctx, [' + image.transform + ']);');
         ctx.scale(1, -1);
         this.cdi.push('ctx.scale(1, -1);');
         // jon -- remove images, replace with black rectangle
@@ -1500,7 +1500,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         ctx.save();
         this.cdi.push('ctx.save();');
         ctx.transform.apply(ctx, entry.transform);
-        this.cdi.push('ctx.transform.apply(ctx, ' + entry.transform + ');');
+        this.cdi.push('ctx.transform.apply(ctx, [' + entry.transform + ']);');
         ctx.scale(1, -1);
         this.cdi.push('ctx.scale(1, -1);');
         // jon -- remove images, replace with black rectangle
