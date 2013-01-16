@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-//TODO: references - window: ?, document: ?
+//TODO: references - window: 0, document: 0
 
 'use strict';
 
