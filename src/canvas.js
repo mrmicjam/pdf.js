@@ -502,7 +502,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     },
     setDash: function CanvasGraphics_setDash(dashArray, dashPhase) {
       var ctx = this.ctx;
-      // TODO: Make it so we always have a setLineDash in our scope
+      // TODO: bat Make it so we always have a setLineDash in our scope
       if ('setLineDash' in ctx) {
         ctx.setLineDash(dashArray);
         this.cdi.push('ctx.setLineDash( ' + dashArray + ');');
@@ -1300,7 +1300,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         var y1 = Math.max(bl[1], br[1], ul[1], ur[1]);
 
         this.ctx.fillRect(x0, y0, x1 - x0, y1 - y0);
-        this.cdi.push('ctx.fillRect(' + x0 + ' ,' + y0 + ', ' + (x1 - x0) +
+        this.cdi.push('ctx.fillRect(' + x0 + ', ' + y0 + ', ' + (x1 - x0) +
           ', ' + (y1 - y0) + ');');
       } else {
         // HACK to draw the gradient onto an infinite rectangle.
