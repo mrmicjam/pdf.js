@@ -422,6 +422,8 @@ var FontLoader = {
   },
 
   isSyncFontLoadingSupported: (function detectSyncFontLoadingSupport() {
+    // jon -- remove DOM/window references
+    /*
     if (isWorker)
       return false;
 
@@ -433,6 +435,8 @@ var FontLoader = {
       return true;
     // TODO other browsers
     return false;
+    */
+    return true;
   })(),
 
   bind: function fontLoaderBind(fonts, callback) {
@@ -448,20 +452,26 @@ var FontLoader = {
         continue;
       }
       font.attached = true;
-
+      // jon -- remove DOM/window references
+      /*
       var rule = font.bindDOM();
       if (rule) {
         rules.push(rule);
         fontsToLoad.push(font);
       }
+      */
     }
 
     var request = FontLoader.queueLoadingCallback(callback);
+    // jon -- remove DOM/window references
+    /* 
     if (rules.length > 0 && !this.isSyncFontLoadingSupported) {
       FontLoader.prepareFontLoadEvent(rules, fontsToLoad, request);
     } else {
       request.complete();
-    }
+    }*/
+    
+    request.complete();
   },
 
   queueLoadingCallback: function FontLoader_queueLoadingCallback(callback) {
@@ -493,9 +503,9 @@ var FontLoader = {
   // loaded in a subdocument.  It's expected that the load of |rules|
   // has already started in this (outer) document, so that they should
   // be ordered before the load in the subdocument.
-  prepareFontLoadEvent: function fontLoaderPrepareFontLoadEvent(rules,
-                                                                fonts,
-                                                                request) {
+  //prepareFontLoadEvent: function fontLoaderPrepareFontLoadEvent(rules,
+  //                                                              fonts,
+  //                                                              request) {
       /** Hack begin */
       // There's no event when a font has finished downloading so the
       // following code is a dirty hack to 'guess' when a font is
@@ -518,7 +528,8 @@ var FontLoader = {
       //
       // The postMessage() hackery was added to work around chrome bug
       // 82402.
-
+      // jon -- remove DOM/window references
+      /*
       var requestId = request.id;
       // Validate the requestId parameter -- the value used to construct HTML.
       if (!/^[\w\-]+$/.test(requestId)) {
@@ -597,8 +608,9 @@ var FontLoader = {
                          'width: 10px; height: 10px;' +
                          'position: absolute; top: 0px; left: 0px;');
       document.body.appendChild(frame);
+      */
       /** Hack end */
-  }
+//  }
 //#else
 //bind: function fontLoaderBind(fonts, callback) {
 //  assert(!isWorker, 'bind() shall be called from main thread');
@@ -4137,6 +4149,8 @@ var Font = (function FontClosure() {
       }
     },
 
+    // jon -- remove DOM/window references
+    /*
     bindDOM: function Font_bindDOM() {
       if (!this.data)
         return null;
@@ -4166,7 +4180,7 @@ var Font = (function FontClosure() {
 
       return rule;
     },
-
+    */
     get spaceWidth() {
       if ('_shadowWidth' in this) {
         return this._shadowWidth;
@@ -6678,7 +6692,9 @@ var CFFCompiler = (function CFFCompilerClosure() {
 // http://code.google.com/p/chromium/issues/detail?id=122465
 // https://github.com/mozilla/pdf.js/issues/1689
 (function checkChromeWindows() {
-  if (/Windows.*Chrome/.test(navigator.userAgent)) {
+  // jon -- remove DOM/window references
+  // if (/Windows.*Chrome/.test(navigator.userAgent)) {
+  if (0) {
     SYMBOLIC_FONT_GLYPH_OFFSET = 0xF100;
   }
 })();
