@@ -492,22 +492,23 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     },
     setLineCap: function CanvasGraphics_setLineCap(style) {
       this.ctx.lineCap = LINE_CAP_STYLES[style];
-      this.cdi.push('ctx.lineCap = ' + LINE_CAP_STYLES[style] + ';');
+      this.cdi.push("ctx.lineCap = '" + LINE_CAP_STYLES[style] + "';");
     },
     setLineJoin: function CanvasGraphics_setLineJoin(style) {
       this.ctx.lineJoin = LINE_JOIN_STYLES[style];
-      this.cdi.push('ctx.lineJoin = ' + LINE_JOIN_STYLES[style] + ';');
+      this.cdi.push("ctx.lineJoin = '" + LINE_JOIN_STYLES[style] + "';");
     },
     setMiterLimit: function CanvasGraphics_setMiterLimit(limit) {
       this.ctx.miterLimit = limit;
-      this.cdi.push('ctx.miterLimit = ' + limit + ';');
+      this.cdi.push("ctx.miterLimit = '" + limit + "';");
     },
     setDash: function CanvasGraphics_setDash(dashArray, dashPhase) {
       var ctx = this.ctx;
       // TODO: bat Make it so we always have a setLineDash in our scope
       if ('setLineDash' in ctx) {
         ctx.setLineDash(dashArray);
-        this.cdi.push('ctx.setLineDash( ' + dashArray + ');');
+        //TODO: bat figure out what to call this
+        //this.cdi.push('ctx.setLineDash( ' + dashArray + ');');
         ctx.lineDashOffset = dashPhase;
         this.cdi.push('ctx.lineDashOffset = ' + dashPhase + ';');
       } else {
@@ -606,14 +607,14 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     },
     curveTo: function CanvasGraphics_curveTo(x1, y1, x2, y2, x3, y3) {
       this.ctx.bezierCurveTo(x1, y1, x2, y2, x3, y3);
-      this.cdi.push('bezierCurveTo(' + x1 + ', ' + y1 + ', ' + x2 + ', ' +
+      this.cdi.push('ctx.bezierCurveTo(' + x1 + ', ' + y1 + ', ' + x2 + ', ' +
         y2 + ', ' + x3 + ', ' + y3 + ');');
       this.current.setCurrentPoint(x3, y3);
     },
     curveTo2: function CanvasGraphics_curveTo2(x2, y2, x3, y3) {
       var current = this.current;
       this.ctx.bezierCurveTo(current.x, current.y, x2, y2, x3, y3);
-      this.cdi.push('bezierCurveTo(' + current.x + ', ' + current.y + ', ' +
+      this.cdi.push('ctx.bezierCurveTo(' + current.x + ', ' + current.y + ', ' +
         x2 + ', ' + y2 + ', ' + x3 + ', ' + y3 + ');');
       current.setCurrentPoint(x3, y3);
     },
@@ -1169,7 +1170,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var rgbColor = cs.getRgb(arguments, 0);
       var color = Util.makeCssRgb(rgbColor);
       this.ctx.strokeStyle = color;
-      this.cdi.push('ctx.strokeStyle = ' + color + ';');
+      this.cdi.push("ctx.strokeStyle = '" + color + "';");
       this.current.strokeColor = color;
     },
     getColorN_Pattern: function CanvasGraphics_getColorN_Pattern(IR, cs) {
@@ -1205,7 +1206,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var rgbColor = cs.getRgb(arguments, 0);
       var color = Util.makeCssRgb(rgbColor);
       this.ctx.fillStyle = color;
-      this.cdi.push('ctx.fillStyle = ' + color + ';');
+      this.cdi.push("ctx.fillStyle = '" + color + "';");
       this.current.fillColor = color;
     },
     setFillColorN: function CanvasGraphics_setFillColorN(/*...*/) {
@@ -1224,7 +1225,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var rgbColor = this.current.strokeColorSpace.getRgb(arguments, 0);
       var color = Util.makeCssRgb(rgbColor);
       this.ctx.strokeStyle = color;
-      this.cdi.push('this.ctx.strokeStyle = ' + color + ';');
+      this.cdi.push("this.ctx.strokeStyle = '" + color + "';");
       this.current.strokeColor = color;
     },
     setFillGray: function CanvasGraphics_setFillGray(gray) {
@@ -1234,7 +1235,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var rgbColor = this.current.fillColorSpace.getRgb(arguments, 0);
       var color = Util.makeCssRgb(rgbColor);
       this.ctx.fillStyle = color;
-      this.cdi.push('this.ctx.fillStyle = ' + color + ';');
+      this.cdi.push("this.ctx.fillStyle = '" + color + "';");
       this.current.fillColor = color;
     },
     setStrokeRGBColor: function CanvasGraphics_setStrokeRGBColor(r, g, b) {
@@ -1244,7 +1245,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var rgbColor = this.current.strokeColorSpace.getRgb(arguments, 0);
       var color = Util.makeCssRgb(rgbColor);
       this.ctx.strokeStyle = color;
-      this.cdi.push('this.ctx.strokeStyle = ' + color + ';');
+      this.cdi.push("this.ctx.strokeStyle = '" + color + "';");
       this.current.strokeColor = color;
     },
     setFillRGBColor: function CanvasGraphics_setFillRGBColor(r, g, b) {
@@ -1254,7 +1255,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var rgbColor = this.current.fillColorSpace.getRgb(arguments, 0);
       var color = Util.makeCssRgb(rgbColor);
       this.ctx.fillStyle = color;
-      this.cdi.push('this.ctx.fillStyle = ' + color + ';');
+      this.cdi.push("this.ctx.fillStyle = '" + color + "';");
       this.current.fillColor = color;
     },
     setStrokeCMYKColor: function CanvasGraphics_setStrokeCMYKColor(c, m, y, k) {
@@ -1263,7 +1264,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
       var color = Util.makeCssCmyk(arguments);
       this.ctx.strokeStyle = color;
-      this.cdi.push('this.ctx.strokeStyle = ' + color + ';');
+      this.cdi.push("this.ctx.strokeStyle = '" + color + "';");
       this.current.strokeColor = color;
     },
     setFillCMYKColor: function CanvasGraphics_setFillCMYKColor(c, m, y, k) {
@@ -1272,7 +1273,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
       var color = Util.makeCssCmyk(arguments);
       this.ctx.fillStyle = color;
-      this.cdi.push('this.ctx.fillStyle = ' + color + ';');
+      this.cdi.push("this.ctx.fillStyle = '" + color + "';");
       this.current.fillColor = color;
     },
 
@@ -1283,7 +1284,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var pattern = Pattern.shadingFromIR(patternIR);
       // TODO: bat fix this!
       ctx.fillStyle = pattern.getPattern(ctx);
-      this.cdi.push('ctx.fillStyle = ' + pattern.getPattern(ctx) + ';');
+      this.cdi.push("ctx.fillStyle = '" + pattern.getPattern(ctx) + "';");
 
       var inv = ctx.mozCurrentTransformInverse;
       if (inv) {
@@ -1573,7 +1574,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     },
     restoreFillRule: function CanvasGraphics_restoreFillRule(rule) {
       this.ctx.mozFillRule = rule;
-      this.cdi.push('ctx.mozFillRule = ' + rule + ';');
+      this.cdi.push("ctx.mozFillRule = '" + rule + "';");
     },
     getSinglePixelWidth: function CanvasGraphics_getSinglePixelWidth(scale) {
       var inverse = this.ctx.mozCurrentTransformInverse;
