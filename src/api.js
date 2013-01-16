@@ -293,12 +293,15 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
             return;
           }
 
-          var canvasDrawInstructions = new Array();
+          var canvasDrawInstructions = [];
           var gfx = new CanvasGraphics(params.canvasContext, this.commonObjs,
             this.objs, params.textLayer, canvasDrawInstructions);
           try {
             this.display(gfx, params.viewport, complete, continueCallback);
-            alert(canvasDrawInstructions);
+            //alert(canvasDrawInstructions);
+            console.log("=========PRINTING PAGE DRAW INSTRUCTIONS============");
+            console.log("======================PAGE " + this.pageNumber + '=======================');
+            console.log(canvasDrawInstructions.join(' '));
           } catch (e) {
             complete(e);
           }

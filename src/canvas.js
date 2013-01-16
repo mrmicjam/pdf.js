@@ -210,8 +210,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
   var EXECUTION_TIME = 15;
 
   function CanvasGraphics(canvasCtx, commonObjs, objs, textLayer, canvasDrawInstructions) {
-    this.cdi = canvasDrawInstructions || new Array();
-    this.cdi.push("TESTING");
+    this.cdi = canvasDrawInstructions || [];
     this.ctx = canvasCtx;
     this.current = new CanvasExtraState();
     this.stateStack = [];
