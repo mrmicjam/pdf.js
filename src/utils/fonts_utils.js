@@ -403,9 +403,11 @@ var Type2Parser = function type2Parser(aFilePath) {
  * writeToFile(fontData, "/tmp/pdf.js." + fontCount + ".cff");
  */
 function writeToFile(aBytes, aFilePath) {
+  // jon -- document/window removal 
+  /*
   if (!('netscape' in window))
     return;
-
+  */
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   var Cc = Components.classes,
       Ci = Components.interfaces;
