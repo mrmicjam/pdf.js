@@ -292,22 +292,17 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
             complete();
             return;
           }
-
-          var canvasDrawInstructions = [];
           var gfx = new CanvasGraphics(params.canvasContext, this.commonObjs,
-            this.objs, params.textLayer, canvasDrawInstructions);
+            this.objs, params.textLayer);
           try {
             this.display(gfx, params.viewport, complete, continueCallback);
-            //alert(canvasDrawInstructions);
-            console.log("=========PRINTING PAGE DRAW INSTRUCTIONS============");
-            console.log("======================PAGE " + this.pageNumber + '=======================');
-            console.log(canvasDrawInstructions.join(' '));
           } catch (e) {
             complete(e);
           }
         }.bind(this),
         function pageDisplayReadPromiseError(reason) {
           complete(reason);
+
         }
       );
 
@@ -370,6 +365,7 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
      */
     display: function PDFPageProxy_display(gfx, viewport, callback,
                                            continueCallback) {
+      globalScope['StepperManager'].enabled = false;
       var stats = this.stats;
       stats.time('Rendering');
 

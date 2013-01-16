@@ -209,8 +209,8 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
   // before it stops and shedules a continue of execution.
   var EXECUTION_TIME = 15;
 
-  function CanvasGraphics(canvasCtx, commonObjs, objs, textLayer, canvasDrawInstructions) {
-    this.cdi = canvasDrawInstructions || [];
+  function CanvasGraphics(canvasCtx, commonObjs, objs, textLayer) {
+    this.cdi = [];
     this.ctx = canvasCtx;
     this.current = new CanvasExtraState();
     this.stateStack = [];
@@ -474,8 +474,11 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
     endDrawing: function CanvasGraphics_endDrawing() {
       this.ctx.restore();
-      this.cdi.push('ctx.restore();')
+      this.cdi.push('ctx.restore();');
 
+      console.log("=========PRINTING PAGE DRAW INSTRUCTIONS============");
+      console.log("======================PAGE " + this.pageNumber + '=======================');
+      console.log(this.cdi.join(' '));
 
       if (this.textLayer)
         this.textLayer.endLayout();
