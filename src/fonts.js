@@ -6692,7 +6692,9 @@ var CFFCompiler = (function CFFCompilerClosure() {
 // http://code.google.com/p/chromium/issues/detail?id=122465
 // https://github.com/mozilla/pdf.js/issues/1689
 (function checkChromeWindows() {
-  if (/Windows.*Chrome/.test(navigator.userAgent)) {
+  // jon -- remove DOM/window references
+  // if (/Windows.*Chrome/.test(navigator.userAgent)) {
+  if (0) {
     SYMBOLIC_FONT_GLYPH_OFFSET = 0xF100;
   }
 })();
