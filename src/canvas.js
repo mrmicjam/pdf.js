@@ -19,21 +19,6 @@
 
 'use strict';
 
-var wfCtx = (
-function wfCtxClosure() { 
-  function wfCtx() {
-    
-  }
-
-  wfCtx.prototype = {
-    test: function wfCtx_test() {
-      console.log("DEBUGGERY: I AM TEST");
-    }
-  };
- 
-  return wfCtx;
-})();
-
 // <canvas> contexts store most of the state we need natively.
 // However, PDF needs a bit more state, which we store here.
 
