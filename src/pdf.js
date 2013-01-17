@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-//TODO: references - window: 1, document: 0
+//TODO: references - window: 0, document: 0
 
 var PDFJS = {};
 //#if BUNDLE_VERSION
@@ -30,5 +30,6 @@ var PDFJS = {};
   'use strict';
 
 //#expand __BUNDLE__
-
-}).call((typeof window === 'undefined') ? this : window);
+// jon -- document/window removal
+//}).call((typeof window === 'undefined') ? this : window);
+}).call(this);
