@@ -345,10 +345,11 @@ if (typeof window === 'undefined') {
   // throw an exception which will be forwarded on automatically.
   PDFJS.LogManager.addLogger({
     warn: function(msg) {
-      globalScope.postMessage({
-        action: '_warn',
-        data: msg
-      });
+        //      globalScope.postMessage({
+        //action: '_warn',
+        //data: msg
+        console.log(msg);
+        //});
     }
   });
 
