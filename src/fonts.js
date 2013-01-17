@@ -442,7 +442,7 @@ var FontLoader = {
   })(),
 
   bind: function fontLoaderBind(fonts, callback) {
-    assert(!isWorker, 'bind() shall be called from main thread');
+    //assert(!isWorker, 'bind() shall be called from main thread');
 
     var rules = [], fontsToLoad = [];
     for (var i = 0, ii = fonts.length; i < ii; i++) {
