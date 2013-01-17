@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-//TODO: references - window: 0, document: 0
+//TODO: references - window: 1, document: 0
 
 'use strict';
 
@@ -339,8 +339,7 @@ var workerConsole = {
 
 // Worker thread?
 // jon -- document/window removal
-// we're disabling worker threads for our purposes
-/*
+// leave this... we're effectively doing a null check on window
 if (typeof window === 'undefined') {
   globalScope.console = workerConsole;
 
@@ -354,7 +353,7 @@ if (typeof window === 'undefined') {
       });
     }
   });
-*/
+
   var handler = new MessageHandler('worker_processor', this);
   WorkerMessageHandler.setup(handler);
 }
