@@ -619,7 +619,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         // for patterns, we transform to pattern space, calculate
         // the pattern, call stroke, and restore to user space
         ctx.save();
-o        // TODO bat fix this!
+        // TODO bat fix this!
         ctx.strokeStyle = strokeColor.getPattern(ctx);
         ctx.stroke();
         ctx.restore();
