@@ -22,8 +22,6 @@
 // <canvas> contexts store most of the state we need natively.
 // However, PDF needs a bit more state, which we store here.
 
-var DEBUG_DELIM = '\n';
-
 var TextRenderingMode = {
   FILL: 0,
   STROKE: 1,
@@ -399,7 +397,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var transform = viewport.transform;
       this.ctx.save();
       this.cdi.push('ctx.save();');
-      this.ctx.transform.apply(this.ctx, transform);
+      this.ctx.transform_apply(this.ctx, transform);
       this.cdi.push('ctx.transform.apply(ctx, [' + transform + ']);');
 
       if (this.textLayer)
@@ -483,7 +481,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
       console.log("=========PRINTING PAGE DRAW INSTRUCTIONS============");
       console.log("======================PAGE " + this.pageNumber + '=======================');
-      console.log(this.cdi.join(' '));
+      //console.log(this.cdi.join('\n'));
 
       if (this.textLayer)
         this.textLayer.endLayout();
@@ -901,7 +899,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     applyTextTransforms: function CanvasGraphics_applyTextTransforms() {
       var ctx = this.ctx;
       var current = this.current;
-      ctx.transform.apply(ctx, current.textMatrix);
+      ctx.transform_apply(ctx, current.textMatrix);
       this.cdi.push('ctx.transform.apply(ctx, [' + current.textMatrix + ']);');
       ctx.translate(current.x, current.y + current.textRise);
       this.cdi.push('ctx.translate(' + current.x + ', ' + current.y + current.textRise + ');');
@@ -955,7 +953,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       if (font.coded) {
         ctx.save();
         this.cdi.push('ctx.save();');
-        ctx.transform.apply(ctx, current.textMatrix);
+        ctx.transform_apply(ctx, current.textMatrix);
         this.cdi.push('ctx.transform.apply(ctx, [' + current.textMatrix + ']);');
         ctx.translate(current.x, current.y);
         this.cdi.push('ctx.translate(' + current.x + ', ' + current.y + ');');
@@ -984,7 +982,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
           this.save();
           ctx.scale(fontSize, fontSize);
           this.cdi.push('ctx.scale(' + fontSize + ', ' + fontSize + ');');
-          ctx.transform.apply(ctx, fontMatrix);
+          ctx.transform_apply(ctx, fontMatrix);
           this.cdi.push('ctx.transform.apply(ctx, [' + fontMatrix + ']);');
           this.executeOperatorList(glyph.operatorList);
           this.restore();
@@ -1430,7 +1428,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
         ctx.save();
         this.cdi.push('ctx.save();');
-        ctx.transform.apply(ctx, image.transform);
+        ctx.transform_apply(ctx, image.transform);
         this.cdi.push('ctx.transform.apply(ctx, [' + image.transform + ']);');
         ctx.scale(1, -1);
         this.cdi.push('ctx.scale(1, -1);');
@@ -1508,7 +1506,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         var entry = map[i];
         ctx.save();
         this.cdi.push('ctx.save();');
-        ctx.transform.apply(ctx, entry.transform);
+        ctx.transform_apply(ctx, entry.transform);
         this.cdi.push('ctx.transform.apply(ctx, [' + entry.transform + ']);');
         ctx.scale(1, -1);
         this.cdi.push('ctx.scale(1, -1);');
