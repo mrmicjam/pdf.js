@@ -1228,7 +1228,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var rgbColor = this.current.strokeColorSpace.getRgb(arguments, 0);
       var color = Util.makeCssRgb(rgbColor);
       this.ctx.strokeStyle = color;
-      this.ctx.cdi.push("this.ctx.strokeStyle = '" + color + "';");
+      this.ctx.cdi.push("ctx.strokeStyle = '" + color + "';");
       this.current.strokeColor = color;
     },
     setFillGray: function CanvasGraphics_setFillGray(gray) {
@@ -1238,7 +1238,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var rgbColor = this.current.fillColorSpace.getRgb(arguments, 0);
       var color = Util.makeCssRgb(rgbColor);
       this.ctx.fillStyle = color;
-      this.ctx.cdi.push("this.ctx.fillStyle = '" + color + "';");
+      this.ctx.cdi.push("ctx.fillStyle = '" + color + "';");
       this.current.fillColor = color;
     },
     setStrokeRGBColor: function CanvasGraphics_setStrokeRGBColor(r, g, b) {
@@ -1248,7 +1248,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var rgbColor = this.current.strokeColorSpace.getRgb(arguments, 0);
       var color = Util.makeCssRgb(rgbColor);
       this.ctx.strokeStyle = color;
-      this.ctx.cdi.push("this.ctx.strokeStyle = '" + color + "';");
+      this.ctx.cdi.push("ctx.strokeStyle = '" + color + "';");
       this.current.strokeColor = color;
     },
     setFillRGBColor: function CanvasGraphics_setFillRGBColor(r, g, b) {
@@ -1258,7 +1258,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var rgbColor = this.current.fillColorSpace.getRgb(arguments, 0);
       var color = Util.makeCssRgb(rgbColor);
       this.ctx.fillStyle = color;
-      this.ctx.cdi.push("this.ctx.fillStyle = '" + color + "';");
+      this.ctx.cdi.push("ctx.fillStyle = '" + color + "';");
       this.current.fillColor = color;
     },
     setStrokeCMYKColor: function CanvasGraphics_setStrokeCMYKColor(c, m, y, k) {
@@ -1267,7 +1267,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
       var color = Util.makeCssCmyk(arguments);
       this.ctx.strokeStyle = color;
-      this.ctx.cdi.push("this.ctx.strokeStyle = '" + color + "';");
+      this.ctx.cdi.push("ctx.strokeStyle = '" + color + "';");
       this.current.strokeColor = color;
     },
     setFillCMYKColor: function CanvasGraphics_setFillCMYKColor(c, m, y, k) {
@@ -1276,7 +1276,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
       var color = Util.makeCssCmyk(arguments);
       this.ctx.fillStyle = color;
-      this.ctx.cdi.push("this.ctx.fillStyle = '" + color + "';");
+      this.ctx.cdi.push("ctx.fillStyle = '" + color + "';");
       this.current.fillColor = color;
     },
 
