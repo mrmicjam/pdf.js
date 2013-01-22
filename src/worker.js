@@ -338,6 +338,8 @@ var workerConsole = {
 };
 
 // Worker thread?
+// jon -- document/window removal
+// leave this... we're effectively doing a null check on window
 if (typeof window === 'undefined') {
   globalScope.console = workerConsole;
 
