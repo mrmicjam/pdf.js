@@ -434,7 +434,10 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
         fnName = fnArray[i];
 
-        if (fnName !== 'dependency') {
+        if (fnName == 'paintXObject') {
+          // jon -- remove conditional once images work
+        }
+        else if (fnName !== 'dependency') {
           this[fnName].apply(this, argsArray[i]);
         } else {
           var deps = argsArray[i];
