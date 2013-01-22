@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-//TODO: references - window: ?, document: ?
+//TODO: references - window: 0, document: 0
 
 'use strict';
 
@@ -438,7 +438,7 @@ var FontLoader = {
     // TODO other browsers
     return false;
     */
-    return true;
+    return false;
   })(),
 
   bind: function fontLoaderBind(fonts, callback) {
