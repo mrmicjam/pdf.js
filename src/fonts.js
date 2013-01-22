@@ -438,7 +438,7 @@ var FontLoader = {
     // TODO other browsers
     return false;
     */
-    return true;
+    return false;
   })(),
 
   bind: function fontLoaderBind(fonts, callback) {
