@@ -38,7 +38,6 @@ var TextRenderingMode = {
 var MIN_FONT_SIZE = 1;
 
 function createScratchCanvas(width, height) {
-  // TODO: bat remove this when we go to node
   var canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
@@ -347,12 +346,15 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       }
     }
 
+    //TODO: bat createScratchCanvas
+    /*
     var tmpCanvas = createScratchCanvas(width, height);
     var tmpCtx = tmpCanvas.getContext('2d');
     putBinaryImageData(tmpCtx, pixels.subarray(0, width * height * 4),
                                width, height);
 
     return tmpCanvas;
+    */
   }
 
   var LINE_CAP_STYLES = ['butt', 'round', 'square'];
@@ -760,6 +762,8 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var canvasWidth = ctx.canvas.width;
       var canvasHeight = ctx.canvas.height;
       // keeping track of the text clipping of the separate canvas
+      //TODO: bat createScratchCanvas
+      /*
       var maskCanvas = createScratchCanvas(canvasWidth, canvasHeight);
       var maskCtx = maskCanvas.getContext('2d');
       maskCtx.setTransform.apply(maskCtx, transform);
@@ -770,6 +774,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       };
       this.textClipLayers = textClipLayers;
       return maskCtx;
+      */
     },
     swapImageForTextClipping:
       function CanvasGraphics_swapImageForTextClipping() {
@@ -1063,8 +1068,11 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
                 break;
             }
             if (textRenderingMode & TextRenderingMode.ADD_TO_PATH_FLAG) {
+              //TODO: bovard createScratchCanvas
+              /*
               var clipCtx = this.getCurrentTextClipping();
               clipCtx.fillText(character, scaledX, 0);
+              */
             }
           }
 
@@ -1382,6 +1390,8 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     paintImageMaskXObject: function CanvasGraphics_paintImageMaskXObject(
                              imgArray, inverseDecode, width, height) {
       var ctx = this.ctx;
+      //TODO: bat createScractchCanvas
+      /*
       var tmpCanvas = createScratchCanvas(width, height);
       var tmpCtx = tmpCanvas.getContext('2d');
 
@@ -1397,6 +1407,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       applyStencilMask(imgArray, width, height, inverseDecode, pixels);
 
       this.paintInlineImageXObject(imgData);
+      */
     },
 
     paintImageMaskXObjectGroup:
@@ -1406,6 +1417,8 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       for (var i = 0, ii = images.length; i < ii; i++) {
         var image = images[i];
         var w = image.width, h = image.height;
+        //TODO: bat createScractCanvas
+        /*
         if (w > tmpCanvasWidth || h > tmpCanvasHeight) {
           tmpCanvasWidth = Math.max(w, tmpCanvasWidth);
           tmpCanvasHeight = Math.max(h, tmpCanvasHeight);
@@ -1418,6 +1431,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
                               fillColor.getPattern(tmpCtx) : fillColor;
         }
         tmpCtx.fillRect(0, 0, w, h);
+        */
 
         var imgData = tmpCtx.getImageData(0, 0, w, h);
         var pixels = imgData.data;
@@ -1464,6 +1478,8 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var currentTransform = ctx.mozCurrentTransformInverse;
       var widthScale = Math.max(Math.abs(currentTransform[0]), 1);
       var heightScale = Math.max(Math.abs(currentTransform[3]), 1);
+      //TODO: bat createScratchCanvas
+      /*
       var tmpCanvas = createScratchCanvas(width, height);
       var tmpCtx = tmpCanvas.getContext('2d');
 
@@ -1489,6 +1505,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         ctx.fillStyle = "rgb(0, 0, 0)";
         ctx.fillRect(0, 0, width, height);
       }
+       */
       this.restore();
     },
 
@@ -1498,9 +1515,12 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var w = imgData.width;
       var h = imgData.height;
 
+        //TODO: bat createScracthCanvas
+        /*
       var tmpCanvas = createScratchCanvas(w, h);
       var tmpCtx = tmpCanvas.getContext('2d');
       putBinaryImageData(tmpCtx, imgData.data, w, h);
+      */
 
       for (var i = 0, ii = map.length; i < ii; i++) {
         var entry = map[i];
