@@ -438,10 +438,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
         fnName = fnArray[i];
 
-        if (fnName == 'paintXObject') {
-          // jon -- remove conditional once images work
-        }
-        else if (fnName !== 'dependency') {
+        if (fnName !== 'dependency') {
           this[fnName].apply(this, argsArray[i]);
         } else {
           var deps = argsArray[i];
@@ -618,10 +615,8 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       consumePath = typeof consumePath !== 'undefined' ? consumePath : true;
       var ctx = this.ctx;
       var strokeColor = this.current.strokeColor;
-      if (this.current.lineWidth === 0) {
-
+      if (this.current.lineWidth === 0)
         ctx.lineWidth = this.getSinglePixelWidth();
-      }
 
       // For stroke we want to temporarily change the global alpha to the
       // stroking alpha.
@@ -1218,10 +1213,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
       this.save();
       var pattern = Pattern.shadingFromIR(patternIR);
-      // TODO: bat fix this!
-      //ctx.fillStyle = pattern.getPattern(ctx);
-      // jon -- fix this
-      ctx.fillStyle = "rgb(200,0,0)";
+      ctx.fillStyle = pattern.getPattern(ctx);
 
       var inv = ctx.mozCurrentTransformInverse;
       if (inv) {
@@ -1302,11 +1294,9 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       // jon -- remove images, replace with black rectangle
       //ctx.drawImage(domImage, 0, 0, domImage.width, domImage.height,
       //              0, -h, w, h);
-      ctx.fillStyle = "rgb(0, 0, 0)";
-      ctx.fillRect(0, -h, w, h);
+      ctx.strokeRect(0, -h, w, h);
 
       this.restore();
-      
     },
 
     paintImageMaskXObject: function CanvasGraphics_paintImageMaskXObject(
@@ -1368,8 +1358,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         // jon -- remove images, replace with black rectangle
         //ctx.drawImage(tmpCanvas, 0, 0, w, h,
         //              0, -1, 1, 1);
-        ctx.fillStyle = "rgb(0, 0, 0)";
-        ctx.fillRect(0, -1, 1, 1);
+        ctx.strokeRect(0, -1, 1, 1);
         ctx.restore();
       }
     },
@@ -1409,8 +1398,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         //                         widthScale, heightScale);
         //ctx.drawImage(tmpCanvas, 0, 0, tmpCanvas.width, tmpCanvas.height,
         //                         0, -height, width, height);
-        ctx.fillStyle = "rgb(0, 0, 0)";
-        ctx.fillRect(0, -height, width, height);
+        ctx.strokeRect(0, -height, width, height);
       } else {
         if (typeof ImageData !== 'undefined' && imgData instanceof ImageData) {
           tmpCtx.putImageData(imgData, 0, 0);
@@ -1419,8 +1407,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         }
         // jon -- remove images, replace with black rectangle
         //ctx.drawImage(tmpCanvas, 0, -height);
-        ctx.fillStyle = "rgb(0, 0, 0)";
-        ctx.fillRect(0, 0, width, height);
+        ctx.strokeRect(0, 0, width, height);
       }
       //endblock
       this.restore();
@@ -1447,8 +1434,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         // jon -- remove images, replace with black rectangle
         //ctx.drawImage(tmpCanvas, entry.x, entry.y, entry.w, entry.h,
         //              0, -1, 1, 1);
-        ctx.fillStyle = "rgb(0, 0, 0)";
-        ctx.fillRect(0, -1, 1, 1);
+        ctx.strokeRect(0, -1, 1, 1);
         ctx.restore();
       }
     },

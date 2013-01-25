@@ -402,9 +402,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
                 fn = 'paintFormXObjectEnd';
                 args = [];
               } else if ('Image' == type.name) {
-                /* jon -- uncomment once we figure out images
                 buildPaintImageXObject(xobj, false);
-                */
               } else {
                 error('Unhandled XObject subtype ' + type.name);
               }
@@ -412,9 +410,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
           } else if (cmd == 'Tf') { // eagerly collect all fonts
             args[0] = handleSetFont(args[0].name);
           } else if (cmd == 'EI') {
-            /* jon -- uncomment once we figure out images
             buildPaintImageXObject(args[0], true);
-            */
           }
 
           switch (fn) {
