@@ -1005,10 +1005,10 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
             }
             if (textRenderingMode & TextRenderingMode.ADD_TO_PATH_FLAG) {
               //TODO: bovard createScratchCanvas
-              /*
+              //
               var clipCtx = this.getCurrentTextClipping();
               clipCtx.fillText(character, scaledX, 0);
-              */
+              //
             }
           }
 
