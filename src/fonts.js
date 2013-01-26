@@ -454,14 +454,11 @@ var FontLoader = {
         continue;
       }
       font.attached = true;
-      // jon -- remove DOM/window references
-      /*
       var rule = font.bindDOM();
-      if (rule) {
-        rules.push(rule);
-        fontsToLoad.push(font);
-      }
-      */
+      //if (rule) {
+      //  rules.push(rule);
+      //  fontsToLoad.push(font);
+      //}
     }
 
     var request = FontLoader.queueLoadingCallback(callback);
@@ -4151,13 +4148,25 @@ var Font = (function FontClosure() {
       }
     },
 
-    // jon -- remove DOM/window references
-    /*
     bindDOM: function Font_bindDOM() {
       if (!this.data)
         return null;
 
+      var fs = require('fs');
+      console.log("getting the datas");
       var data = bytesToString(this.data);
+      if (data == null) {
+        console.log("the font data was none after doing bytes to String");
+        return null;
+      }
+      console.log("trying to write a font...");
+      fs.writeFile('rendered/' + this.name, JSON.stringify(data), function (err) {
+        console.log('tried to write font and failed! :(');
+        console.log(err);
+      });
+      console.log("done!");
+      return null;
+      /*
       var fontName = this.loadedName;
 
       // Add the font-face rule to the document
@@ -4181,8 +4190,9 @@ var Font = (function FontClosure() {
         globalScope['FontInspector'].fontAdded(this, url);
 
       return rule;
+      */
     },
-    */
+
     get spaceWidth() {
       if ('_shadowWidth' in this) {
         return this._shadowWidth;
