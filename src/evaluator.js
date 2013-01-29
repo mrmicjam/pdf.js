@@ -19,6 +19,10 @@
 
 'use strict';
 
+var fs = require('fs');
+
+var i = 0;
+
 var PartialEvaluator = (function PartialEvaluatorClosure() {
   function PartialEvaluator(xref, handler, pageIndex, uniquePrefix) {
     this.state = new EvalState();
@@ -378,6 +382,16 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
                 'XObject should have a Name subtype'
               );
 
+              var imgBuffer = new Buffer(xobj.bytes);
+              if (xobj instanceof JpegStream)
+                fs.writeFile('rendered/image' + i++ + '.jpg', imgBuffer.toString('base64'), 'base64');
+              else if (xobj instanceof FlateStream) {
+                console.log("Image type: FLATE STREAM");
+              }
+              else {
+                console.log("Image type: WE DON'T KNOW");
+              }
+
               if ('Form' == type.name) {
                 var matrix = xobj.dict.get('Matrix');
                 var bbox = xobj.dict.get('BBox');
@@ -402,6 +416,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
                 fn = 'paintFormXObjectEnd';
                 args = [];
               } else if ('Image' == type.name) {
+                console.log("IMAGE");
                 buildPaintImageXObject(xobj, false);
               } else {
                 error('Unhandled XObject subtype ' + type.name);
@@ -410,6 +425,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
           } else if (cmd == 'Tf') { // eagerly collect all fonts
             args[0] = handleSetFont(args[0].name);
           } else if (cmd == 'EI') {
+            console.log("EI");
             buildPaintImageXObject(args[0], true);
           }
 

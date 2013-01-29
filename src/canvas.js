@@ -19,6 +19,8 @@
 
 'use strict';
 
+var fs = require('fs');
+
 // <canvas> contexts store most of the state we need natively.
 // However, PDF needs a bit more state, which we store here.
 
@@ -266,6 +268,8 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
     ctx.putImageData(tmpImgData, 0, 0);
     */
+
+    console.log("PUT BINARY IMAGE DATA");
   }
 
   function prescaleImage(pixels, width, height, widthScale, heightScale) {
@@ -350,15 +354,12 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       }
     }
 
-    //TODO: bat createScratchCanvas
-    //begin block
     var tmpCanvas = createScratchCanvas(ctx, width, height);
     var tmpCtx = tmpCanvas.getContext('2d');
     putBinaryImageData(tmpCtx, pixels.subarray(0, width * height * 4),
                                width, height);
 
     return tmpCanvas;
-    //endblock
   }
 
   var LINE_CAP_STYLES = ['butt', 'round', 'square'];
@@ -502,7 +503,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     },
     setDash: function CanvasGraphics_setDash(dashArray, dashPhase) {
       var ctx = this.ctx;
-      // TODO: bat Make it so we always have a setLineDash in our scope
+      /* we always have setLineDash in our scope
       if ('setLineDash' in ctx) {
         ctx.setLineDash(dashArray);
         //TODO: bat figure out what to call this
@@ -510,7 +511,10 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       } else {
         ctx.mozDash = dashArray;
         ctx.mozDashOffset = dashPhase;
-      }
+      }*/
+
+      ctx.setLineDash(dashArray);
+      ctx.lineDashOffset = dashPhase;
     },
     setRenderingIntent: function CanvasGraphics_setRenderingIntent(intent) {
       // Maybe if we one day fully support color spaces this will be important
@@ -722,8 +726,6 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var canvasWidth = ctx.canvas.width;
       var canvasHeight = ctx.canvas.height;
       // keeping track of the text clipping of the separate canvas
-      //TODO: bat createScratchCanvas
-      // begin_block
       var maskCanvas = createScratchCanvas(ctx, canvasWidth, canvasHeight);
       var maskCtx = maskCanvas.getContext('2d');
       maskCtx.setTransform.apply(maskCtx, transform);
@@ -734,7 +736,6 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       };
       this.textClipLayers = textClipLayers;
       return maskCtx;
-      //endblock
     },
     swapImageForTextClipping:
       function CanvasGraphics_swapImageForTextClipping() {
@@ -750,7 +751,6 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       ctx.restore();
     },
     completeTextClipping: function CanvasGraphics_completeTextClipping() {
-      // TODO: bat fix this!
       var ctx = this.ctx;
       // applying mask to the image (result is saved in maskCanvas)
       var maskCtx = this.textClipLayers.maskCtx;
@@ -761,7 +761,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       // restoring image data and applying the result of masked drawing
       ctx.save();
       ctx.setTransform(1, 0, 0, 1, 0, 0);
-      // TODO: bat These when we figure out the image thing!
+
       ctx.putImageData(this.textClipLayers.imageData, 0, 0);
       ctx.drawImage(this.textClipLayers.maskCanvas, 0, 0);
       ctx.restore();
@@ -999,11 +999,8 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
                 break;
             }
             if (textRenderingMode & TextRenderingMode.ADD_TO_PATH_FLAG) {
-              //TODO: bovard createScratchCanvas
-              //
               var clipCtx = this.getCurrentTextClipping();
               clipCtx.fillText(character, scaledX, 0);
-              //
             }
           }
 
@@ -1280,7 +1277,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     },
 
     paintJpegXObject: function CanvasGraphics_paintJpegXObject(objId, w, h) {
-      var domImage = this.objs.get(objId);
+      var domImage = ctx.domImage(this.objs.get(objId));
       if (!domImage) {
         error('Dependent image isn\'t ready yet');
       }
@@ -1302,8 +1299,6 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     paintImageMaskXObject: function CanvasGraphics_paintImageMaskXObject(
                              imgArray, inverseDecode, width, height) {
       var ctx = this.ctx;
-      //TODO: bat createScractchCanvas
-      //begin block
       var tmpCanvas = createScratchCanvas(ctx, width, height);
       var tmpCtx = tmpCanvas.getContext('2d');
 
@@ -1319,7 +1314,6 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       applyStencilMask(imgArray, width, height, inverseDecode, pixels);
 
       this.paintInlineImageXObject(imgData);
-      //endblock
     },
 
     paintImageMaskXObjectGroup:
@@ -1329,8 +1323,6 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       for (var i = 0, ii = images.length; i < ii; i++) {
         var image = images[i];
         var w = image.width, h = image.height;
-        //TODO: bat createScractCanvas
-        //beginblock
         if (w > tmpCanvasWidth || h > tmpCanvasHeight) {
           tmpCanvasWidth = Math.max(w, tmpCanvasWidth);
           tmpCanvasHeight = Math.max(h, tmpCanvasHeight);
@@ -1343,7 +1335,6 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
                               fillColor.getPattern(tmpCtx) : fillColor;
         }
         tmpCtx.fillRect(0, 0, w, h);
-        //endblock
 
         var imgData = tmpCtx.getImageData(0, 0, w, h);
         var pixels = imgData.data;
@@ -1355,10 +1346,8 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         ctx.save();
         ctx.transform_apply(ctx, image.transform);
         ctx.scale(1, -1);
-        // jon -- remove images, replace with black rectangle
-        //ctx.drawImage(tmpCanvas, 0, 0, w, h,
-        //              0, -1, 1, 1);
-        ctx.strokeRect(0, -1, 1, 1);
+        ctx.drawImage(tmpCanvas, 0, 0, w, h,
+                      0, -1, 1, 1);
         ctx.restore();
       }
     },
@@ -1384,8 +1373,6 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var currentTransform = ctx.mozCurrentTransformInverse;
       var widthScale = Math.max(Math.abs(currentTransform[0]), 1);
       var heightScale = Math.max(Math.abs(currentTransform[3]), 1);
-      //TODO: bat createScratchCanvas
-      //
       var tmpCanvas = createScratchCanvas(ctx, width, height);
       var tmpCtx = tmpCanvas.getContext('2d');
 
@@ -1405,11 +1392,8 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         } else {
           putBinaryImageData(tmpCtx, imgData.data, width, height);
         }
-        // jon -- remove images, replace with black rectangle
-        //ctx.drawImage(tmpCanvas, 0, -height);
-        ctx.strokeRect(0, 0, width, height);
+        ctx.drawImage(tmpCanvas, 0, -height);
       }
-      //endblock
       this.restore();
     },
 
@@ -1419,22 +1403,17 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var w = imgData.width;
       var h = imgData.height;
 
-        //TODO: bat createScracthCanvas
-        //begin block
       var tmpCanvas = createScratchCanvas(ctx, w, h);
       var tmpCtx = tmpCanvas.getContext('2d');
       putBinaryImageData(tmpCtx, imgData.data, w, h);
-        //endblock
 
       for (var i = 0, ii = map.length; i < ii; i++) {
         var entry = map[i];
         ctx.save();
         ctx.transform_apply(ctx, entry.transform);
         ctx.scale(1, -1);
-        // jon -- remove images, replace with black rectangle
-        //ctx.drawImage(tmpCanvas, entry.x, entry.y, entry.w, entry.h,
-        //              0, -1, 1, 1);
-        ctx.strokeRect(0, -1, 1, 1);
+        ctx.drawImage(tmpCanvas, entry.x, entry.y, entry.w, entry.h,
+                      0, -1, 1, 1);
         ctx.restore();
       }
     },
