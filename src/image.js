@@ -49,7 +49,8 @@ var PDFImage = (function PDFImageClosure() {
     // Clamp the value to the range
     return value < 0 ? 0 : value > max ? max : value;
   }
-  function PDFImage(xref, res, image, inline, smask, mask) {
+  function PDFImage(xref, res, image, inline, smask, mask, path) {
+    console.log("inside PDFImage. path == " + path);
     this.image = image;
     if (image.getParams) {
       // JPX/JPEG2000 streams directly contain bits per component
@@ -63,6 +64,7 @@ var PDFImage = (function PDFImageClosure() {
     var dict = image.dict;
     this.width = dict.get('Width', 'W');
     this.height = dict.get('Height', 'H');
+    this.path = path;
 
     if (this.width < 1 || this.height < 1)
       error('Invalid image width: ' + this.width + ' or height: ' +
@@ -126,7 +128,8 @@ var PDFImage = (function PDFImageClosure() {
    * of a PDFImage when the image is ready to be used.
    */
   PDFImage.buildImage = function PDFImage_buildImage(callback, handler, xref,
-                                                     res, image, inline) {
+                                                     res, image, inline, path) {
+    console.log("Inside buildImage. path == " + path);
     var imageDataPromise = new Promise();
     var smaskPromise = new Promise();
     var maskPromise = new Promise();
@@ -136,7 +139,7 @@ var PDFImage = (function PDFImageClosure() {
         function(results) {
       var imageData = results[0], smaskData = results[1], maskData = results[2];
       var image = new PDFImage(xref, res, imageData, inline, smaskData,
-                               maskData);
+                               maskData, path);
       callback(image);
     });
 
@@ -438,10 +441,13 @@ var PDFImage = (function PDFImageClosure() {
     getImageData: function PDFImage_getImageData() {
       var drawWidth = this.drawWidth;
       var drawHeight = this.drawHeight;
+      console.log("inside PDFIMAGE_getwhateveritshardtotype. this.path = " + this.path);
+      var imgPath = this.path;
       var imgData = {
         width: drawWidth,
         height: drawHeight,
-        data: new Uint8Array(drawWidth * drawHeight * 4)
+        data: new Uint8Array(drawWidth * drawHeight * 4),
+        path: imgPath
       };
       var pixels = imgData.data;
       this.fillRgbaBuffer(pixels, drawWidth, drawHeight);
@@ -456,6 +462,7 @@ var PDFImage = (function PDFImageClosure() {
 })();
 
 function loadJpegStream(id, imageData, objs) {
+  /*
   var img = new Image();
   img.onload = (function loadJpegStream_onloadClosure() {
     objs.resolve(id, img);
@@ -473,5 +480,6 @@ function loadJpegStream(id, imageData, objs) {
   else
     console.log("err0r3d!");
   img.src = src;
+  */
 }
 

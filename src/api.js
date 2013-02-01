@@ -608,12 +608,11 @@ var WorkerTransport = (function WorkerTransportClosure() {
 
         switch (type) {
           case 'JpegStream':
-            console.log("type == JpegStream");
             var imageData = data[3];
-            loadJpegStream(id, imageData, pageProxy.objs);
+            //loadJpegStream(id, imageData, pageProxy.objs);
+            pageProxy.objs.resolve(id, imageData);
             break;
           case 'Image':
-            console.log("type == Image");
             var imageData = data[3];
             pageProxy.objs.resolve(id, imageData);
 

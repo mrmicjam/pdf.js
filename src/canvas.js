@@ -1277,11 +1277,14 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     },
 
     paintJpegXObject: function CanvasGraphics_paintJpegXObject(objId, w, h) {
-      var domImage = ctx.domImage(this.objs.get(objId));
+      var domImage = this.objs.get(objId);
+
+      console.log("Img path is:" + domImage.path);
+
       if (!domImage) {
         error('Dependent image isn\'t ready yet');
       }
-
+      
       this.save();
 
       var ctx = this.ctx;

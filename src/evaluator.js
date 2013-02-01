@@ -20,7 +20,7 @@
 'use strict';
 
 var fs = require('fs');
-
+var jpeg = require('jpeg');
 var i = 0;
 
 var PartialEvaluator = (function PartialEvaluatorClosure() {
@@ -288,6 +288,11 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
         insertDependency([objId]);
         args = [objId, w, h];
 
+        if (image instanceof JpegStream) {
+          var imgBuffer = new Buffer(image.bytes);
+          fs.writeFile('rendered/' + objId + '.jpg', imgBuffer.toString('base64'), 'base64');
+        }
+
         if (!softMask && !mask && image instanceof JpegStream &&
             image.isNativelySupported(xref, resources)) {
           // These JPEGs don't need any more processing so we can just send it.
@@ -300,8 +305,14 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
 
         PDFImage.buildImage(function(imageObj) {
             var imgData = imageObj.getImageData();
+
+            var imgBuffer = new Buffer(imgData.data);
+            var jpegObject = new jpeg.Jpeg(imgBuffer, imgData.width, imgData.height, 'rgba');
+            var jpeg_image = jpegObject.encodeSync();
+            fs.writeFile('rendered/' + objId + '.jpg', jpeg_image.toString('base64'), 'base64');
+
             handler.send('obj', [objId, pageIndex, 'Image', imgData]);
-          }, handler, xref, resources, image, inline);
+          }, handler, xref, resources, image, inline, 'rendered/' + objId);
       }
 
       if (!queue)
@@ -382,16 +393,6 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
                 'XObject should have a Name subtype'
               );
 
-              var imgBuffer = new Buffer(xobj.bytes);
-              if (xobj instanceof JpegStream)
-                fs.writeFile('rendered/image' + i++ + '.jpg', imgBuffer.toString('base64'), 'base64');
-              else if (xobj instanceof FlateStream) {
-                console.log("Image type: FLATE STREAM");
-              }
-              else {
-                console.log("Image type: WE DON'T KNOW");
-              }
-
               if ('Form' == type.name) {
                 var matrix = xobj.dict.get('Matrix');
                 var bbox = xobj.dict.get('BBox');
@@ -416,7 +417,6 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
                 fn = 'paintFormXObjectEnd';
                 args = [];
               } else if ('Image' == type.name) {
-                console.log("IMAGE");
                 buildPaintImageXObject(xobj, false);
               } else {
                 error('Unhandled XObject subtype ' + type.name);
@@ -425,7 +425,6 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
           } else if (cmd == 'Tf') { // eagerly collect all fonts
             args[0] = handleSetFont(args[0].name);
           } else if (cmd == 'EI') {
-            console.log("EI");
             buildPaintImageXObject(args[0], true);
           }
 
