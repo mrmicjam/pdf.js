@@ -50,7 +50,6 @@ var PDFImage = (function PDFImageClosure() {
     return value < 0 ? 0 : value > max ? max : value;
   }
   function PDFImage(xref, res, image, inline, smask, mask, path) {
-    console.log("inside PDFImage. path == " + path);
     this.image = image;
     if (image.getParams) {
       // JPX/JPEG2000 streams directly contain bits per component
@@ -129,7 +128,6 @@ var PDFImage = (function PDFImageClosure() {
    */
   PDFImage.buildImage = function PDFImage_buildImage(callback, handler, xref,
                                                      res, image, inline, path) {
-    console.log("Inside buildImage. path == " + path);
     var imageDataPromise = new Promise();
     var smaskPromise = new Promise();
     var maskPromise = new Promise();
@@ -441,7 +439,6 @@ var PDFImage = (function PDFImageClosure() {
     getImageData: function PDFImage_getImageData() {
       var drawWidth = this.drawWidth;
       var drawHeight = this.drawHeight;
-      console.log("inside PDFIMAGE_getwhateveritshardtotype. this.path = " + this.path);
       var imgPath = this.path;
       var imgData = {
         width: drawWidth,

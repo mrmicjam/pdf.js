@@ -1279,7 +1279,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     paintJpegXObject: function CanvasGraphics_paintJpegXObject(objId, w, h) {
       var domImage = this.objs.get(objId);
 
-      console.log("Img path is:" + domImage.path);
+      console.log("Img path is:" + domImage);
 
       if (!domImage) {
         error('Dependent image isn\'t ready yet');
@@ -1292,8 +1292,8 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       ctx.scale(1 / w, -1 / h);
 
       // jon -- remove images, replace with black rectangle
-      //ctx.drawImage(domImage, 0, 0, domImage.width, domImage.height,
-      //              0, -h, w, h);
+      ctx.drawImage(domImage, 0, 0, domImage.width, domImage.height,
+                    0, -h, w, h);
       ctx.strokeRect(0, -h, w, h);
 
       this.restore();
@@ -1357,8 +1357,11 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
     paintImageXObject: function CanvasGraphics_paintImageXObject(objId) {
       var imgData = this.objs.get(objId);
+
       if (!imgData)
         error('Dependent image isn\'t ready yet');
+
+      console.log("Path is " + imgData.path);
 
       this.paintInlineImageXObject(imgData);
     },
@@ -1390,12 +1393,15 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         //                         0, -height, width, height);
         ctx.strokeRect(0, -height, width, height);
       } else {
+        /*
         if (typeof ImageData !== 'undefined' && imgData instanceof ImageData) {
           tmpCtx.putImageData(imgData, 0, 0);
         } else {
           putBinaryImageData(tmpCtx, imgData.data, width, height);
         }
-        ctx.drawImage(tmpCanvas, 0, -height);
+        ctx.drawImage(tmpCanvas, 0, -height);*/
+        tmpCtx.putImageData(imgData, 0, 0);
+        ctx.drawImage(imgData, 0, -height);
       }
       this.restore();
     },

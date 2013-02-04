@@ -312,7 +312,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
             fs.writeFile('rendered/' + objId + '.jpg', jpeg_image.toString('base64'), 'base64');
 
             handler.send('obj', [objId, pageIndex, 'Image', imgData]);
-          }, handler, xref, resources, image, inline, 'rendered/' + objId);
+          }, handler, xref, resources, image, inline, objId + '.jpg');
       }
 
       if (!queue)
