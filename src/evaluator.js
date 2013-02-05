@@ -21,6 +21,7 @@
 
 var fs = require('fs');
 var jpeg = require('jpeg');
+var png = require('png');
 var i = 0;
 
 var PartialEvaluator = (function PartialEvaluatorClosure() {
@@ -307,12 +308,14 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
             var imgData = imageObj.getImageData();
 
             var imgBuffer = new Buffer(imgData.data);
-            var jpegObject = new jpeg.Jpeg(imgBuffer, imgData.width, imgData.height, 'rgba');
-            var jpeg_image = jpegObject.encodeSync();
-            fs.writeFile('rendered/' + objId + '.jpg', jpeg_image.toString('base64'), 'base64');
+            //            var jpegObject = new jpeg.Jpeg(imgBuffer, imgData.width, imgData.height, 'rgba');
+            //            var jpeg_image = jpegObject.encodeSync();
+            var pngObject = new png.Png(imgBuffer, imgData.width, imgData.height, 'rgba');
+            var png_image = pngObject.encodeSync();
+            fs.writeFile('rendered/' + objId + '.png', png_image.toString('base64'), 'base64');
 
             handler.send('obj', [objId, pageIndex, 'Image', imgData]);
-          }, handler, xref, resources, image, inline, objId + '.jpg');
+          }, handler, xref, resources, image, inline, objId + '.png');
       }
 
       if (!queue)
