@@ -1383,7 +1383,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var heightScale = Math.max(Math.abs(currentTransform[3]), 1);
       var tmpCanvas = createScratchCanvas(ctx, width, height);
       var tmpCtx = tmpCanvas.getContext('2d');
-
+      /*
       if (widthScale > 2 || heightScale > 2) {
         // canvas does not resize well large images to small -- using simple
         // algorithm to perform pre-scaling
@@ -1395,16 +1395,17 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
                       0, -height, width, height);
         //ctx.strokeRect(0, -height, width, height);
       } else {
-        /*
         if (typeof ImageData !== 'undefined' && imgData instanceof ImageData) {
           tmpCtx.putImageData(imgData, 0, 0);
         } else {
           putBinaryImageData(tmpCtx, imgData.data, width, height);
         }
-        ctx.drawImage(tmpCanvas, 0, -height);*/
-        tmpCtx.putImageData(imgData, 0, 0);
-        ctx.drawImage(imgData, 0, -height);
-      }
+        ctx.drawImage(tmpCanvas, 0, -height);
+
+      */
+      tmpCtx.putImageData(imgData, 0, 0);
+      ctx.drawImage(imgData, 0, -height);
+
       this.restore();
     },
 
