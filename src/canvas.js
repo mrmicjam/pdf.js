@@ -257,6 +257,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     var tmpImgData = 'createImageData' in ctx ? ctx.createImageData(w, h) :
       ctx.getImageData(0, 0, w, h);
 
+    var tmpImgData = { width: w, height: h, data: [], path: path};
     var tmpImgDataPixels = tmpImgData.data;
     if ('set' in tmpImgDataPixels)
       tmpImgDataPixels.set(data);
@@ -272,7 +273,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     console.log("PUT BINARY IMAGE DATA");
   }
 
-  function prescaleImage(pixels, width, height, widthScale, heightScale) {
+  function prescaleImage(ctx, pixels, width, height, widthScale, heightScale) {
     pixels = new Uint8Array(pixels); // creating a copy
     while (widthScale > 2 || heightScale > 2) {
       if (heightScale > 2) {
@@ -354,6 +355,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       }
     }
 
+    console.log("DOWN HERE");
     var tmpCanvas = createScratchCanvas(ctx, width, height);
     var tmpCtx = tmpCanvas.getContext('2d');
     putBinaryImageData(tmpCtx, pixels.subarray(0, width * height * 4),
@@ -1386,12 +1388,12 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         // canvas does not resize well large images to small -- using simple
         // algorithm to perform pre-scaling
         // jon -- remove images, replace with black rectangle
-        //tmpCanvas = prescaleImage(imgData.data,
-        //                         width, height,
-        //                         widthScale, heightScale);
-        //ctx.drawImage(tmpCanvas, 0, 0, tmpCanvas.width, tmpCanvas.height,
-        //                         0, -height, width, height);
-        ctx.strokeRect(0, -height, width, height);
+        tmpCanvas = prescaleImage(ctx, imgData.data,
+                                  width, height,
+                                  widthScale, heightScale);
+        ctx.drawImage(tmpCanvas, 0, 0, tmpCanvas.width, tmpCanvas.height,
+                      0, -height, width, height);
+        //ctx.strokeRect(0, -height, width, height);
       } else {
         /*
         if (typeof ImageData !== 'undefined' && imgData instanceof ImageData) {

@@ -20,8 +20,7 @@
 'use strict';
 
 var fs = require('fs');
-var jpeg = require('jpeg');
-var png = require('png');
+var png = require('pngjs');
 var i = 0;
 
 var PartialEvaluator = (function PartialEvaluatorClosure() {
@@ -306,6 +305,11 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
 
         PDFImage.buildImage(function(imageObj) {
             var imgData = imageObj.getImageData();
+            var imgBuffer = new Buffer(imgData.data);
+            var pngObject = new png.PNG({width:imgData.width, height:imgData.height});
+
+            imgBuffer.copy(pngObject.data);
+            pngObject.pack().pipe(fs.createWriteStream('rendered/' + imgData.path));
 
             handler.send('obj', [objId, pageIndex, 'Image', imgData]);
           }, handler, xref, resources, image, inline, objId + '.png');
