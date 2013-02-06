@@ -469,7 +469,7 @@ var FontLoader = {
     } else {
       request.complete();
     }*/
-    
+
     request.complete();
   },
 
@@ -4160,10 +4160,12 @@ var Font = (function FontClosure() {
         return null;
       }
       console.log("trying to write a font...");
-      fs.writeFile('rendered/' + this.name, JSON.stringify(data), function (err) {
+      var btoa = require("btoa");
+      fs.writeFile('rendered/' + this.name, btoa(data), function (err) {
         console.log('tried to write font and failed! :(');
         console.log(err);
       });
+      console.log("{'url':'rendered/"+this.name+"','fontFamily':'"+this.loadedName+"','fontWeight':'normal','fontStyle':'normal'}");
       console.log("done!");
       return null;
       /*
