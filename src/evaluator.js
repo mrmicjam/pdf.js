@@ -297,7 +297,12 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
             image.isNativelySupported(xref, resources)) {
           // These JPEGs don't need any more processing so we can just send it.
           fn = 'paintJpegXObject';
-          handler.send('obj', [objId, pageIndex, 'JpegStream', image.getIR()]);
+          var imageData = {
+            width: w,
+            height: h,
+            path: objId + '.jpg',
+          };
+          handler.send('obj', [objId, pageIndex, 'JpegStream', imageData]);
           return;
         }
 

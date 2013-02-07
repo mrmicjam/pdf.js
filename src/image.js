@@ -459,6 +459,8 @@ var PDFImage = (function PDFImageClosure() {
 })();
 
 function loadJpegStream(id, imageData, objs) {
+  // use the jpeg stream as-is
+  objs.resolve(id, imageData);
   /*
   var img = new Image();
   img.onload = (function loadJpegStream_onloadClosure() {

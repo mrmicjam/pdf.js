@@ -269,8 +269,6 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
     ctx.putImageData(tmpImgData, 0, 0);
     */
-
-    console.log("PUT BINARY IMAGE DATA");
   }
 
   function prescaleImage(ctx, pixels, width, height, widthScale, heightScale) {
@@ -355,7 +353,6 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       }
     }
 
-    console.log("DOWN HERE");
     var tmpCanvas = createScratchCanvas(ctx, width, height);
     var tmpCtx = tmpCanvas.getContext('2d');
     putBinaryImageData(tmpCtx, pixels.subarray(0, width * height * 4),
@@ -1281,8 +1278,6 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     paintJpegXObject: function CanvasGraphics_paintJpegXObject(objId, w, h) {
       var domImage = this.objs.get(objId);
 
-      console.log("Img path is:" + domImage);
-
       if (!domImage) {
         error('Dependent image isn\'t ready yet');
       }
@@ -1293,10 +1288,8 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       // scale the image to the unit square
       ctx.scale(1 / w, -1 / h);
 
-      // jon -- remove images, replace with black rectangle
       ctx.drawImage(domImage, 0, 0, domImage.width, domImage.height,
                     0, -h, w, h);
-      ctx.strokeRect(0, -h, w, h);
 
       this.restore();
     },
@@ -1363,8 +1356,6 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       if (!imgData)
         error('Dependent image isn\'t ready yet');
 
-      console.log("Path is " + imgData.path);
-
       this.paintInlineImageXObject(imgData);
     },
 
@@ -1393,7 +1384,6 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
                                   widthScale, heightScale);
         ctx.drawImage(tmpCanvas, 0, 0, tmpCanvas.width, tmpCanvas.height,
                       0, -height, width, height);
-        //ctx.strokeRect(0, -height, width, height);
       } else {
         if (typeof ImageData !== 'undefined' && imgData instanceof ImageData) {
           tmpCtx.putImageData(imgData, 0, 0);
@@ -1403,6 +1393,9 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         ctx.drawImage(tmpCanvas, 0, -height);
 
       */
+      // No need to deal with putBinaryImageData since we're always loading an image.
+      // No need to resize for now. Just write draw instructions to the canvas inst.
+      // and return.
       tmpCtx.putImageData(imgData, 0, 0);
       ctx.drawImage(imgData, 0, -height);
 
