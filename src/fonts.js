@@ -4161,11 +4161,15 @@ var Font = (function FontClosure() {
       }
       console.log("trying to write a font...");
       var btoa = require("btoa");
-      fs.writeFile('rendered/' + this.name, btoa(data), function (err) {
+      data = btoa(data);
+      //data = new Buffer(data, 'base64').toString('binary');
+      fs.writeFile('rendered/' + this.name, data, function (err) {
         console.log('tried to write font and failed! :(');
         console.log(err);
       });
-      console.log("{'url':'rendered/"+this.name+"','fontFamily':'"+this.loadedName+"','fontWeight':'normal','fontStyle':'normal'}");
+      var fontDef = "{'PDFJS':'true','url':'rendered/"+this.name+"','fontFamily':'"+this.loadedName+"','fontWeight':'normal','fontStyle':'normal'},";
+      fs.appendFileSync('rendered/fonts.txt', fontDef);
+      console.log("done!");
       console.log("done!");
       return null;
       /*
