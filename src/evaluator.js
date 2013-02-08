@@ -290,7 +290,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
 
         if (image instanceof JpegStream) {
           var imgBuffer = new Buffer(image.bytes);
-          fs.writeFile('rendered/' + objId + '.jpg', imgBuffer.toString('base64'), 'base64');
+          fs.writeFile('rendered/' + objId + '.jpg' + '&width=' + w + '&height=' + h, imgBuffer.toString('base64'), 'base64');
         }
 
         if (!softMask && !mask && image instanceof JpegStream &&
@@ -314,7 +314,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
             var pngObject = new png.PNG({width:imgData.width, height:imgData.height});
 
             imgBuffer.copy(pngObject.data);
-            pngObject.pack().pipe(fs.createWriteStream('rendered/' + imgData.path));
+            pngObject.pack().pipe(fs.createWriteStream('rendered/' + imgData.path + '&width=' + imgData.width + '&height=' + imgData.height));
 
             handler.send('obj', [objId, pageIndex, 'Image', imgData]);
           }, handler, xref, resources, image, inline, objId + '.png');
