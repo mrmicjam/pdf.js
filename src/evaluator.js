@@ -1154,7 +1154,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
           };
           this.extractDataStructures(dict, dict, xref, properties);
 
-          return new Font(baseFontName + baseDict.loadedName, null, properties);
+          return new Font(baseFontName/* + baseDict.loadedName*/, null, properties);
         }
       }
 
@@ -1212,8 +1212,8 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
       if (type.name === 'Type3') {
         properties.coded = true;
       }
-
-      return new Font(fontName.name + properties.loadedName, fontFile, properties);
+      
+      return new Font(fontName.name/* + properties.loadedName*/, fontFile, properties);
     }
   };
 
