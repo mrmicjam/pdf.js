@@ -4166,9 +4166,8 @@ var Font = (function FontClosure() {
         console.log('tried to write font and failed! :(');
         console.log(err);
       });
-      var fontDef = "{'PDFJS':'true','url':'"+PDFJS.font_url+this.name+"','fontFamily':'"+this.loadedName+"','fontWeight':'normal','fontStyle':'normal'},";
-      fs.appendFileSync('rendered/fonts.txt', fontDef);
-      console.log("done!");
+      var fontDef = {'PDFJS':'true','url':PDFJS.font_url+this.name,'fontFamily':this.loadedName,'fontWeight':'normal','fontStyle':'normal'};
+      PDFJS.addFontDef(fontDef);
       console.log("done!");
       return null;
       /*
