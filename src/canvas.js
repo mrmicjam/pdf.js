@@ -17,8 +17,6 @@
 
 'use strict';
 
-var fs = require('fs');
-
 // <canvas> contexts store most of the state we need natively.
 // However, PDF needs a bit more state, which we store here.
 
@@ -255,7 +253,6 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     var tmpImgData = 'createImageData' in ctx ? ctx.createImageData(w, h) :
       ctx.getImageData(0, 0, w, h);
 
-    var tmpImgData = { width: w, height: h, data: [], path: path};
     var tmpImgDataPixels = tmpImgData.data;
     if ('set' in tmpImgDataPixels)
       tmpImgDataPixels.set(data);
@@ -500,18 +497,13 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     },
     setDash: function CanvasGraphics_setDash(dashArray, dashPhase) {
       var ctx = this.ctx;
-      /* we always have setLineDash in our scope
       if ('setLineDash' in ctx) {
         ctx.setLineDash(dashArray);
-        //TODO: bat figure out what to call this
         ctx.lineDashOffset = dashPhase;
       } else {
         ctx.mozDash = dashArray;
         ctx.mozDashOffset = dashPhase;
-      }*/
-
-      ctx.setLineDash(dashArray);
-      ctx.lineDashOffset = dashPhase;
+      }
     },
     setRenderingIntent: function CanvasGraphics_setRenderingIntent(intent) {
       // Maybe if we one day fully support color spaces this will be important
@@ -626,7 +618,6 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         // for patterns, we transform to pattern space, calculate
         // the pattern, call stroke, and restore to user space
         ctx.save();
-        // TODO bat fix this!
         ctx.strokeStyle = strokeColor.getPattern(ctx);
         ctx.stroke();
         ctx.restore();
@@ -1113,7 +1104,6 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
           color = base.getRgb(args, 0);
         }
-        //TODO: bat this might be a problem
         var pattern = new TilingPattern(IR, color, this.ctx, this.objs);
       } else if (IR[0] == 'RadialAxial' || IR[0] == 'Dummy') {
         var pattern = Pattern.shadingFromIR(IR);
@@ -1276,7 +1266,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       if (!domImage) {
         error('Dependent image isn\'t ready yet');
       }
-      
+
       this.save();
 
       var ctx = this.ctx;
@@ -1367,6 +1357,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var heightScale = Math.max(Math.abs(currentTransform[3]), 1);
       var tmpCanvas = createScratchCanvas(ctx, width, height);
       var tmpCtx = tmpCanvas.getContext('2d');
+      //TODO: See if we can get PDF.js to have a flag to turn off this
       /*
       if (widthScale > 2 || heightScale > 2) {
         // canvas does not resize well large images to small -- using simple

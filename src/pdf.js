@@ -28,6 +28,4 @@ var PDFJS = {};
   'use strict';
 
 //#expand __BUNDLE__
-// jon -- document/window removal
-//}).call((typeof window === 'undefined') ? this : window);
-}).call(this);
+}).call((typeof window === 'undefined') ? this : window);
