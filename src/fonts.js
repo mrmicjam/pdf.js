@@ -4152,6 +4152,7 @@ var Font = (function FontClosure() {
 
       var fs = require('fs');
       console.log("getting the datas");
+      console.log("Path is " + PDFJS.font_path);
       var data = bytesToString(this.data);
       if (data == null) {
         console.log("the font data was none after doing bytes to String");
@@ -4161,11 +4162,11 @@ var Font = (function FontClosure() {
       var btoa = require("btoa");
       data = btoa(data);
       //data = new Buffer(data, 'base64').toString('binary');
-      fs.writeFile('rendered/' + this.name, data, function (err) {
+      fs.writeFile(PDFJS.font_path + this.name, data, function (err) {
         console.log('tried to write font and failed! :(');
         console.log(err);
       });
-      var fontDef = "{'PDFJS':'true','url':'rendered/"+this.name+"','fontFamily':'"+this.loadedName+"','fontWeight':'normal','fontStyle':'normal'},";
+      var fontDef = "{'PDFJS':'true','url':'"+PDFJS.font_url+this.name+"','fontFamily':'"+this.loadedName+"','fontWeight':'normal','fontStyle':'normal'},";
       fs.appendFileSync('rendered/fonts.txt', fontDef);
       console.log("done!");
       console.log("done!");
