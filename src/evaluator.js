@@ -19,7 +19,6 @@
 
 var fs = require('fs');
 var png = require('pngjs');
-var i = 0;
 
 var PartialEvaluator = (function PartialEvaluatorClosure() {
   function PartialEvaluator(xref, handler, pageIndex, uniquePrefix) {

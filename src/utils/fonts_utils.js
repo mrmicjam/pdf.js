@@ -28,7 +28,6 @@
  * Build a charset by assigning the glyph name and the human readable form
  * of the glyph data.
  */
-
 function readCharset(aStream, aCharstrings) {
   var charset = {};
 

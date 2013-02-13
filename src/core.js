@@ -15,15 +15,9 @@
  * limitations under the License.
  */
 
-//TODO: references - window: 0, document: 0
-
 'use strict';
 
-// TODO: bat they seem to judge if they are a worker thread by whether they
-// have access to window or not, we might have to change this
-// jon -- document/window removal
-//var globalScope = (typeof window === 'undefined') ? this : window;
-var globalScope = this;
+var globalScope = (typeof window === 'undefined') ? this : window;
 
 var isWorker = (typeof window == 'undefined');
 
