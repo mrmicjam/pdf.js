@@ -15,8 +15,6 @@
  * limitations under the License.
  */
 
-//TODO: references - window: 1, document: 0
-
 'use strict';
 
 function MessageHandler(name, comObj) {

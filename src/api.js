@@ -15,8 +15,6 @@
  * limitations under the License.
  */
 
-//TODO: references - window: 0, document: 0
-
  'use strict';
 
 /**
@@ -294,6 +292,7 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
             complete();
             return;
           }
+
           var gfx = new CanvasGraphics(params.canvasContext, this.commonObjs,
             this.objs, params.textLayer);
           try {

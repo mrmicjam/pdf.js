@@ -15,8 +15,6 @@
  * limitations under the License.
  */
 
-//TODO: references - window: 0, document: 1
-
 'use strict';
 
 var fs = require('fs');
@@ -620,7 +618,6 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var strokeColor = this.current.strokeColor;
       if (this.current.lineWidth === 0)
         ctx.lineWidth = this.getSinglePixelWidth();
-
       // For stroke we want to temporarily change the global alpha to the
       // stroking alpha.
       ctx.globalAlpha = this.current.strokeAlpha;
@@ -760,7 +757,6 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       // restoring image data and applying the result of masked drawing
       ctx.save();
       ctx.setTransform(1, 0, 0, 1, 0, 0);
-
       ctx.putImageData(this.textClipLayers.imageData, 0, 0);
       ctx.drawImage(this.textClipLayers.maskCanvas, 0, 0);
       ctx.restore();
@@ -1277,7 +1273,6 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
     paintJpegXObject: function CanvasGraphics_paintJpegXObject(objId, w, h) {
       var domImage = this.objs.get(objId);
-
       if (!domImage) {
         error('Dependent image isn\'t ready yet');
       }
@@ -1352,7 +1347,6 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
     paintImageXObject: function CanvasGraphics_paintImageXObject(objId) {
       var imgData = this.objs.get(objId);
-
       if (!imgData)
         error('Dependent image isn\'t ready yet');
 
@@ -1364,7 +1358,6 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var width = imgData.width;
       var height = imgData.height;
       var ctx = this.ctx;
-
       this.save();
       // scale the image to the unit square
       ctx.scale(1 / width, -1 / height);

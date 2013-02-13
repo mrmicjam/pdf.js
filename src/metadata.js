@@ -15,8 +15,6 @@
  * limitations under the License.
  */
 
-//TODO: references - window: 0, document: 0
-
 'use strict';
 
 var xml2js = require('xml2js');

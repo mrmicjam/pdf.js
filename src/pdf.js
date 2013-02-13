@@ -15,8 +15,6 @@
  * limitations under the License.
  */
 
-//TODO: references - window: 0, document: 0
-
 var PDFJS = {};
 //#if BUNDLE_VERSION
 //#expand PDFJS.version = '__BUNDLE_VERSION__';

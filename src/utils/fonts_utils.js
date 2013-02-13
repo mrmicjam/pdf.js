@@ -29,8 +29,6 @@
  * of the glyph data.
  */
 
-//TODO: references - window: 0, document: 0
-
 function readCharset(aStream, aCharstrings) {
   var charset = {};
 

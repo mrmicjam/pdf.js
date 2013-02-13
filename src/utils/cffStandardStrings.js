@@ -15,8 +15,6 @@
  * limitations under the License.
  */
 
-//TODO: references - window: 0, document: 0
-
 var CFFEncodingMap = {
   '0': '-reserved-',
   '1': 'hstem',
