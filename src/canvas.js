@@ -397,7 +397,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     beginDrawing: function CanvasGraphics_beginDrawing(viewport) {
       var transform = viewport.transform;
       this.ctx.save();
-      this.ctx.transform_apply(this.ctx, transform);
+      this.ctx.transform.apply(this.ctx, transform);
 
       if (this.textLayer)
         this.textLayer.beginLayout();
@@ -842,7 +842,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     applyTextTransforms: function CanvasGraphics_applyTextTransforms() {
       var ctx = this.ctx;
       var current = this.current;
-      ctx.transform_apply(ctx, current.textMatrix);
+      ctx.transform.apply(ctx, current.textMatrix);
       ctx.translate(current.x, current.y + current.textRise);
       if (current.fontDirection > 0) {
         ctx.scale(current.textHScale, -1);
@@ -891,7 +891,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       // Type3 fonts - each glyph is a "mini-PDF"
       if (font.coded) {
         ctx.save();
-        ctx.transform_apply(ctx, current.textMatrix);
+        ctx.transform.apply(ctx, current.textMatrix);
         ctx.translate(current.x, current.y);
 
         ctx.scale(textHScale, 1);
@@ -914,7 +914,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
           this.save();
           ctx.scale(fontSize, fontSize);
-          ctx.transform_apply(ctx, fontMatrix);
+          ctx.transform.apply(ctx, fontMatrix);
           this.executeOperatorList(glyph.operatorList);
           this.restore();
 
@@ -1327,7 +1327,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         tmpCtx.putImageData(imgData, 0, 0);
 
         ctx.save();
-        ctx.transform_apply(ctx, image.transform);
+        ctx.transform.apply(ctx, image.transform);
         ctx.scale(1, -1);
         ctx.drawImage(tmpCanvas, 0, 0, w, h,
                       0, -1, 1, 1);
@@ -1399,7 +1399,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       for (var i = 0, ii = map.length; i < ii; i++) {
         var entry = map[i];
         ctx.save();
-        ctx.transform_apply(ctx, entry.transform);
+        ctx.transform.apply(ctx, entry.transform);
         ctx.scale(1, -1);
         ctx.drawImage(tmpCanvas, entry.x, entry.y, entry.w, entry.h,
                       0, -1, 1, 1);
