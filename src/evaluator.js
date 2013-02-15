@@ -287,7 +287,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
 
         if (image instanceof JpegStream) {
           var imgBuffer = new Buffer(image.bytes);
-          fs.writeFile('rendered/' + objId + '.jpg' + '&width=' + w + '&height=' + h, imgBuffer.toString('base64'), 'base64');
+          fs.writeFile(PDFJS.image_path + objId + '.jpg' + '&width=' + w + '&height=' + h, imgBuffer.toString('base64'), 'base64');
         }
 
         if (!softMask && !mask && image instanceof JpegStream &&
@@ -297,8 +297,8 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
           var imageData = {
             width: w,
             height: h,
-            path: objId + '.jpg',
           };
+          PDFJS.setImg(objId + '.jpg');
           handler.send('obj', [objId, pageIndex, 'JpegStream', imageData]);
           return;
         }
@@ -311,10 +311,10 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
             var pngObject = new png.PNG({width:imgData.width, height:imgData.height});
 
             imgBuffer.copy(pngObject.data);
-            pngObject.pack().pipe(fs.createWriteStream('rendered/' + imgData.path + '&width=' + imgData.width + '&height=' + imgData.height));
-
+            pngObject.pack().pipe(fs.createWriteStream(PDFJS.image_path + objId + '.png' + '&width=' + imgData.width + '&height=' + imgData.height));
+            PDFJS.setImg(objId + '.png');
             handler.send('obj', [objId, pageIndex, 'Image', imgData]);
-          }, handler, xref, resources, image, inline, objId + '.png');
+          }, handler, xref, resources, image, inline);
       }
 
       if (!queue)

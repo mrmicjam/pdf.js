@@ -1380,7 +1380,6 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       // No need to deal with putBinaryImageData since we're always loading an image.
       // No need to resize for now. Just write draw instructions to the canvas inst.
       // and return.
-      tmpCtx.putImageData(imgData, 0, 0);
       ctx.drawImage(imgData, 0, -height);
 
       this.restore();

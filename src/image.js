@@ -47,7 +47,7 @@ var PDFImage = (function PDFImageClosure() {
     // Clamp the value to the range
     return value < 0 ? 0 : value > max ? max : value;
   }
-  function PDFImage(xref, res, image, inline, smask, mask, path) {
+  function PDFImage(xref, res, image, inline, smask, mask) {
     this.image = image;
     if (image.getParams) {
       // JPX/JPEG2000 streams directly contain bits per component
@@ -61,7 +61,6 @@ var PDFImage = (function PDFImageClosure() {
     var dict = image.dict;
     this.width = dict.get('Width', 'W');
     this.height = dict.get('Height', 'H');
-    this.path = path;
 
     if (this.width < 1 || this.height < 1)
       error('Invalid image width: ' + this.width + ' or height: ' +
@@ -125,7 +124,7 @@ var PDFImage = (function PDFImageClosure() {
    * of a PDFImage when the image is ready to be used.
    */
   PDFImage.buildImage = function PDFImage_buildImage(callback, handler, xref,
-                                                     res, image, inline, path) {
+                                                     res, image, inline) {
     var imageDataPromise = new Promise();
     var smaskPromise = new Promise();
     var maskPromise = new Promise();
@@ -135,7 +134,7 @@ var PDFImage = (function PDFImageClosure() {
         function(results) {
       var imageData = results[0], smaskData = results[1], maskData = results[2];
       var image = new PDFImage(xref, res, imageData, inline, smaskData,
-                               maskData, path);
+                               maskData);
       callback(image);
     });
 
@@ -437,12 +436,10 @@ var PDFImage = (function PDFImageClosure() {
     getImageData: function PDFImage_getImageData() {
       var drawWidth = this.drawWidth;
       var drawHeight = this.drawHeight;
-      var imgPath = this.path;
       var imgData = {
         width: drawWidth,
         height: drawHeight,
-        data: new Uint8Array(drawWidth * drawHeight * 4),
-        path: imgPath
+        data: new Uint8Array(drawWidth * drawHeight * 4)
       };
       var pixels = imgData.data;
       this.fillRgbaBuffer(pixels, drawWidth, drawHeight);
