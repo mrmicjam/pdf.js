@@ -4151,23 +4151,17 @@ var Font = (function FontClosure() {
         return null;
 
       var fs = require('fs');
-      //console.log("getting the datas");
       var data = bytesToString(this.data);
+
       if (data == null) {
         console.log("the font data was none after doing bytes to String");
         return null;
       }
-      //console.log("trying to write a font...");
-      var btoa = require("btoa");
-      data = btoa(data);
-      //data = new Buffer(data, 'base64').toString('binary');
-      fs.writeFile(PDFJS.font_path + this.name, data, function (err) {
-        //console.log('tried to write font and failed! :(');
-        //console.log(err);
-      });
-      var fontDef = {'PDFJS':'true','url':PDFJS.font_url+this.name,'fontFamily':this.loadedName,'fontWeight':'normal','fontStyle':'normal'};
+      
+      // do a goddamn thing
+      var fontDef = PDFJS.saveFont(PDFJS.font_url, this.name, this.loadedName, data);
       PDFJS.addFontDef(fontDef);
-      //console.log("done!");
+
       return null;
       /*
       var fontName = this.loadedName;
