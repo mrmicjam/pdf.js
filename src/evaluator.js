@@ -287,7 +287,8 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
 
         if (image instanceof JpegStream) {
           var imgBuffer = new Buffer(image.bytes);
-          fs.writeFile(PDFJS.image_path + objId + '.jpg' + '&width=' + w + '&height=' + h, imgBuffer.toString('base64'), 'base64');
+          var suffix = (PDFJS.files_local ? '&width=' + w + '&height=' + h : '');
+          fs.writeFile(PDFJS.image_path + objId + '.jpg' + suffix, imgBuffer.toString('base64'), 'base64');
         }
 
         if (!softMask && !mask && image instanceof JpegStream &&
@@ -309,9 +310,10 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
             var imgData = imageObj.getImageData();
             var imgBuffer = new Buffer(imgData.data);
             var pngObject = new png.PNG({width:imgData.width, height:imgData.height});
+            var suffix = (PDFJS.files_local ? '&width=' + w + '&height=' + h : '');
 
             imgBuffer.copy(pngObject.data);
-            pngObject.pack().pipe(fs.createWriteStream(PDFJS.image_path + objId + '.png' + '&width=' + imgData.width + '&height=' + imgData.height));
+            pngObject.pack().pipe(fs.createWriteStream(PDFJS.image_path + objId + '.png' + suffix));
             PDFJS.setImg(objId + '.png');
             handler.send('obj', [objId, pageIndex, 'Image', imgData]);
           }, handler, xref, resources, image, inline);
