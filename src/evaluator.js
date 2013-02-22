@@ -17,9 +17,6 @@
 
 'use strict';
 
-var fs = require('fs');
-var png = require('pngjs');
-
 var PartialEvaluator = (function PartialEvaluatorClosure() {
   function PartialEvaluator(xref, handler, pageIndex, uniquePrefix) {
     this.state = new EvalState();
@@ -285,12 +282,6 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
         insertDependency([objId]);
         args = [objId, w, h];
 
-        if (image instanceof JpegStream) {
-          var imgBuffer = new Buffer(image.bytes);
-          var suffix = (PDFJS.files_local ? '&width=' + w + '&height=' + h : '');
-          fs.writeFile(PDFJS.image_path + objId + '.jpg' + suffix, imgBuffer.toString('base64'), 'base64');
-        }
-
         if (!softMask && !mask && image instanceof JpegStream &&
             image.isNativelySupported(xref, resources)) {
           // These JPEGs don't need any more processing so we can just send it.
@@ -299,7 +290,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
             width: w,
             height: h,
           };
-          PDFJS.setImg(objId + '.jpg');
+          PDFJS.saveImg(image.bytes, w, h, 'jpg');
           handler.send('obj', [objId, pageIndex, 'JpegStream', imageData]);
           return;
         }
@@ -308,13 +299,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
 
         PDFImage.buildImage(function(imageObj) {
             var imgData = imageObj.getImageData();
-            var imgBuffer = new Buffer(imgData.data);
-            var pngObject = new png.PNG({width:imgData.width, height:imgData.height});
-            var suffix = (PDFJS.files_local ? '&width=' + w + '&height=' + h : '');
-
-            imgBuffer.copy(pngObject.data);
-            pngObject.pack().pipe(fs.createWriteStream(PDFJS.image_path + objId + '.png' + suffix));
-            PDFJS.setImg(objId + '.png');
+            PDFJS.saveImg(imgData.data, w, h, 'png');
             handler.send('obj', [objId, pageIndex, 'Image', imgData]);
           }, handler, xref, resources, image, inline);
       }
