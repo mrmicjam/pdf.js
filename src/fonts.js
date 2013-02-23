@@ -2338,6 +2338,7 @@ var Font = (function FontClosure() {
       case 'CIDFontType0':
         this.mimetype = 'font/opentype';
 
+        console.log("cff subtype: " + subtype);
         var cff = (subtype == 'Type1C' || subtype == 'CIDFontType0C') ?
           new CFFFont(file, properties) : new Type1Font(name, file, properties);
 
@@ -2345,6 +2346,39 @@ var Font = (function FontClosure() {
 
         // Wrap the CFF data inside an OTF font file
         data = this.convert(name, cff, properties);
+        if (subtype == 'Type1C' || subtype == 'CIDFontType0C') {
+        for (var n=0; n < cff.charstrings.length; n++) {
+                    console.log("\t\ttest: ",n, this.testChar, cff.charstrings[n]);
+                if (subtype == 'CIDFontType0C') {
+                    this.testChar = this.toUnicode[cff.charstrings[n].glyph];
+                } else if (subtype == 'Type1C') {
+                    this.testChar = cff.charstrings[n].unicode;
+                }
+                if (cff.charstrings[n].glyph == 'space' ||
+                    this.testChar === 9 ||this.testChar === 32 || this.testChar === 160) {
+                    console.log("skipping space: " + this.testChar);
+                    continue;
+                } else {
+                    console.log(this.testChar, String.fromCharCode(this.testChar));
+                    if (subtype == 'CIDFontType0C')
+                        this.testChar = cff.charstrings[n].unicode;
+                    break;
+                }
+        }
+        } else {
+        for (var n=0; n < this.toUnicode.length; n++) {
+            if (this.toUnicode[n] > 0) {
+                this.testChar = this.toUnicode[n];
+                if (this.testChar === 9 ||this.testChar === 32 || this.testChar === 160) {
+                    console.log("skipping space: " + this.testChar);
+                    continue;
+                } else {
+                    console.log(this.testChar, String.fromCharCode(this.testChar));
+                    break;
+                }
+            }
+        }
+        }
         break;
 
       case 'TrueType':
@@ -2797,6 +2831,8 @@ var Font = (function FontClosure() {
     font: null,
     mimetype: null,
     encoding: null,
+    testChar: 65,
+    cmap_format: 0,
 
     exportData: function Font_exportData() {
       var data = {};
@@ -2953,7 +2989,8 @@ var Font = (function FontClosure() {
             return {
               glyphs: glyphs,
               ids: ids,
-              hasShortCmap: true
+              hasShortCmap: true,
+              format: format
             };
           } else if (format == 4) {
             // re-creating the table in format 4 since the encoding
@@ -3016,7 +3053,8 @@ var Font = (function FontClosure() {
 
             return {
               glyphs: glyphs,
-              ids: ids
+              ids: ids,
+              format: format
             };
           } else if (format == 6) {
             // Format 6 is a 2-bytes dense mapping, which means the font data
@@ -3039,7 +3077,8 @@ var Font = (function FontClosure() {
 
             return {
               glyphs: glyphs,
-              ids: ids
+              ids: ids,
+              format: format
             };
           }
         }
@@ -3648,6 +3687,7 @@ var Font = (function FontClosure() {
 
         glyphs = cmapTable.glyphs;
         ids = cmapTable.ids;
+        this.cmap_format = cmapTable.format;
 
         var hasShortCmap = !!cmapTable.hasShortCmap;
         var toFontChar = this.toFontChar;
@@ -3824,6 +3864,46 @@ var Font = (function FontClosure() {
         ids.push(0);
       }
 
+      console.log("cmap_format: " + this.cmap_format + " TEST:" + this.testChar);
+      /*if (this.cmap_format == 0) {
+          console.error("00000000000000000000000");
+          console.log("isSymbolic: " + this.isSymbolicFont);
+          for (var i=0; i<ids.length; i++) {
+                if (ids[i] !== 0) {
+                    console.log(i, ids[i], glyphs[i], String.fromCharCode(glyphs[i].unicode));
+                }
+          }
+      } else if (this.cmap_format == 4) {
+          console.error("44444444444444444444444");
+      } else if (this.cmap_format == 6) {
+      */
+          console.error("66666666666666666666666");
+          console.log("isSymbolic: " + this.isSymbolicFont);
+          find_testChar:
+          for (var i=0; i<ids.length; i++) {
+                if (ids[i] !== 0) {
+                    console.log(i, ids[i], glyphs[i], String.fromCharCode(glyphs[i].unicode));
+                    if (this.isSymbolicFont) {
+                        console.log(this.toUnicode[glyphs[i].code]);
+                        this.testChar = this.toUnicode[glyphs[i].code];
+                        console.log("?converted from symbolic");
+                    } else {
+                        this.testChar = glyphs[i].unicode;
+                    }
+                      switch (this.testChar) {
+                          case 32:
+                          case 160:
+                              console.log("found space");
+                              continue;
+                          default:
+                              if (this.isSymbolicFont) {
+                                    this.testChar = glyphs[i].unicode;
+                              }
+                              break find_testChar;
+                      }
+                }
+          }
+      //}
       // Converting glyphs and ids into font's cmap table
       cmap.data = createCMapTable(glyphs, ids);
       var unicodeIsEnabled = [];
@@ -4152,6 +4232,63 @@ var Font = (function FontClosure() {
 
       var fs = require('fs');
       //console.log("getting the datas");
+      //for (var step in this) {
+      //    console.log(step);
+      //}
+      console.log("[");
+      var all_chars = Array();
+      var testChar = this.testChar;
+
+      console.log('this.testChar: ' + this.testChar);
+          /*
+      find_first_char:
+      for (var i = 0; i < this.toUnicode.length; i++) {
+          var testChar = this.toUnicode[i];
+          if (testChar === undefined)
+              continue;
+          switch (testChar) {
+              // TODO: Find a better check for whitespace.
+              // Maybe check for empty glyph/drawing data or draw to a canvas to
+              // check?
+              case 32:
+              case 160:
+                console.log("\tfound space .. replacing");
+                console.log("\ttoUnicode.length:" + this.toUnicode.length);
+                  continue;
+              default:
+                  //break find_first_char;
+                  if (testChar < 48)
+                      continue;
+          }
+          if (testChar > 48) {
+              if (testChar < 90)
+                  break find_first_char;
+              if (testChar > 97)
+                  if (testChar < 122)
+                      break find_first_char;
+          }
+      }
+      */
+      for (var i = 0; i < this.toUnicode.length; i++) {
+          if (this.toUnicode[i] !== undefined) {
+              all_chars.push(String.fromCharCode(this.toUnicode[i]));
+          }
+      }
+      //console.log("all_chars");
+      //console.log(all_chars);
+
+      console.log("\tloadedName: " + this.loadedName);
+      console.log("\tunicode: " + testChar);
+      console.log("\ttoFontChar:" + this.toFontChar[testChar]);
+      console.log("\ttoFontChar count:" + this.toFontChar.length);
+      console.log("\ttoUnicode count:" + this.toUnicode.length);
+      testChar = String.fromCharCode(testChar);
+      console.log("\ttestChar: " +testChar);
+      console.log("]");
+      console.error(this.name + ' ' + this.loadedName + ' \t' + testChar);
+      //console.log(GlyphsUnicode);
+          
+
       var data = bytesToString(this.data);
       if (data == null) {
         console.log("the font data was none after doing bytes to String");
@@ -4165,7 +4302,8 @@ var Font = (function FontClosure() {
         //console.log('tried to write font and failed! :(');
         //console.log(err);
       });
-      var fontDef = {'PDFJS':'true','url':PDFJS.font_url+this.name,'fontFamily':this.loadedName,'fontWeight':'normal','fontStyle':'normal'};
+      //var fontDef = {'PDFJS':'true','url':PDFJS.font_url+this.name,'fontFamily':this.loadedName,'fontWeight':'normal','fontStyle':'normal'};
+      var fontDef = {'PDFJS':'true','url':PDFJS.font_url+this.name,'fontFamily':this.loadedName,'fontWeight':'normal','fontStyle':'normal','testChar':testChar,'all_chars':all_chars};
       PDFJS.addFontDef(fontDef);
       //console.log("done!");
       return null;
