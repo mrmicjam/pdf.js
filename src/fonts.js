@@ -2350,7 +2350,7 @@ var Font = (function FontClosure() {
         for (var n=0; n < cff.charstrings.length; n++) {
                     console.log("\t\ttest: ",n, this.testChar, cff.charstrings[n]);
                 if (subtype == 'CIDFontType0C') {
-                    this.testChar = this.toUnicode[cff.charstrings[n].glyph];
+                    this.testChar = cff.charstrings[n].glyph;
                 } else if (subtype == 'Type1C') {
                     this.testChar = cff.charstrings[n].unicode;
                 }
@@ -3891,11 +3891,32 @@ var Font = (function FontClosure() {
                         this.testChar = glyphs[i].unicode;
                     }
                       switch (this.testChar) {
+                          case 9:
                           case 32:
                           case 160:
                               console.log("found space");
                               continue;
                           default:
+                              if (emptyGlyphIds[i]) {
+                                if (i == (ids.length - 1)) {
+                                    console.log("last char and all empty!?");
+                                    var temp;
+                                    var h = temp = 0xe000;
+                                    for (var j=0; j < this.toUnicode.length; j++) {
+                                        h = this.toUnicode[j];
+                                        if (h >= 0xe000) {
+                                            if (h == temp) {
+                                                temp = h + 1;
+                                            } else {
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    this.testChar = temp;
+                                }
+                                else
+                                    continue;
+                              }
                               if (this.isSymbolicFont) {
                                     this.testChar = glyphs[i].unicode;
                               }
