@@ -41,7 +41,7 @@ function createScratchCanvas(ctx, width, height) {
   canvas.width = width;
   canvas.height = height;
   */
-  var canvas = ctx.tmpCanvas.createCanvas(width, height);
+  var canvas = ctx.createCanvas(width, height);
   return canvas;
 }
 
