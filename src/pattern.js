@@ -202,8 +202,7 @@ Shadings.RadialAxial = (function RadialAxialClosure() {
           var c = colorStops[i];
           grad.addColorStop(c[0], c[1]);
         }
-        //TODO: why are we doing this?
-        return ctx.gradient;
+        return grad;
       }
     };
   };
