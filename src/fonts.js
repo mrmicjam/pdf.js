@@ -2345,34 +2345,37 @@ var Font = (function FontClosure() {
 
         // Wrap the CFF data inside an OTF font file
         data = this.convert(name, cff, properties);
+
+        // WF: testChar lookup for Type1/CIDFontType0
         if (subtype == 'Type1C' || subtype == 'CIDFontType0C') {
-        for (var n=0; n < cff.charstrings.length; n++) {
-                if (subtype == 'CIDFontType0C') {
-                    this.testChar = cff.charstrings[n].glyph;
-                } else if (subtype == 'Type1C') {
-                    this.testChar = cff.charstrings[n].unicode;
-                }
-                if (cff.charstrings[n].glyph == 'space' ||
-                    this.testChar === 9 ||this.testChar === 32 || this.testChar === 160) {
-                    continue;
-                } else {
-                    if (subtype == 'CIDFontType0C')
-                        this.testChar = cff.charstrings[n].unicode;
-                    break;
-                }
-        }
-        } else {
-        for (var n=0; n < this.toUnicode.length; n++) {
-            if (this.toUnicode[n] > 0) {
-                this.testChar = this.toUnicode[n];
-                if (this.testChar === 9 ||this.testChar === 32 || this.testChar === 160) {
-                    continue;
-                } else {
-                    break;
-                }
+          for (var n=0; n < cff.charstrings.length; n++) {
+            if (subtype == 'CIDFontType0C') {
+              this.testChar = cff.charstrings[n].glyph;
+            } else if (subtype == 'Type1C') {
+              this.testChar = cff.charstrings[n].unicode;
             }
+            if (cff.charstrings[n].glyph == 'space' ||
+              this.testChar === 9 ||this.testChar === 32 || this.testChar === 160) {
+                continue;
+              } else {
+                if (subtype == 'CIDFontType0C')
+                  this.testChar = cff.charstrings[n].unicode;
+                break;
+              }
+          }
+        } else {
+          for (var n=0; n < this.toUnicode.length; n++) {
+            if (this.toUnicode[n] > 0) {
+              this.testChar = this.toUnicode[n];
+              if (this.testChar === 9 ||this.testChar === 32 || this.testChar === 160) {
+                continue;
+              } else {
+                break;
+              }
+            }
+          }
         }
-        }
+        // END WF
         break;
 
       case 'TrueType':
@@ -3858,46 +3861,48 @@ var Font = (function FontClosure() {
         ids.push(0);
       }
 
-          find_testChar:
-          for (var i=0; i<ids.length; i++) {
-                if (ids[i] !== 0) {
-                    if (this.isSymbolicFont) {
-                        this.testChar = this.toUnicode[glyphs[i].code];
-                    } else {
-                        this.testChar = glyphs[i].unicode;
-                    }
-                      switch (this.testChar) {
-                          case 9:
-                          case 32:
-                          case 160:
-                              continue;
-                          default:
-                              if (emptyGlyphIds[i]) {
-                                if (i == (ids.length - 1)) {
-                                    var temp;
-                                    var h = temp = 0xe000;
-                                    for (var j=0; j < this.toUnicode.length; j++) {
-                                        h = this.toUnicode[j];
-                                        if (h >= 0xe000) {
-                                            if (h == temp) {
-                                                temp = h + 1;
-                                            } else {
-                                                break;
-                                            }
-                                        }
-                                    }
-                                    this.testChar = temp;
-                                }
-                                else
-                                    continue;
-                              }
-                              if (this.isSymbolicFont) {
-                                    this.testChar = glyphs[i].unicode;
-                              }
-                              break find_testChar;
-                      }
-                }
+      // WF: testChar lookup for TTF/CIDFontType2
+      find_testChar:
+      for (var i=0; i<ids.length; i++) {
+        if (ids[i] !== 0) {
+          if (this.isSymbolicFont) {
+            this.testChar = this.toUnicode[glyphs[i].code];
+          } else {
+            this.testChar = glyphs[i].unicode;
           }
+          switch (this.testChar) {
+            case 9:
+            case 32:
+            case 160:
+              continue;
+            default:
+              if (emptyGlyphIds[i]) {
+                if (i == (ids.length - 1)) {
+                  var temp;
+                  var h = temp = 0xe000;
+                  for (var j=0; j < this.toUnicode.length; j++) {
+                    h = this.toUnicode[j];
+                    if (h >= 0xe000) {
+                      if (h == temp) {
+                        temp = h + 1;
+                      } else {
+                        break;
+                      }
+                    }
+                  }
+                  this.testChar = temp;
+                }
+                else
+                  continue;
+              }
+              if (this.isSymbolicFont) {
+                this.testChar = glyphs[i].unicode;
+              }
+              break find_testChar;
+          }
+        }
+      }
+      // END WF
 
       // Converting glyphs and ids into font's cmap table
       cmap.data = createCMapTable(glyphs, ids);
