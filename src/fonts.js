@@ -4158,7 +4158,6 @@ var Font = (function FontClosure() {
         return null;
       }
       
-      // do a goddamn thing
       var fontDef = PDFJS.saveFont(PDFJS.font_url, this.name, this.loadedName, data);
       PDFJS.addFontDef(fontDef);
 
