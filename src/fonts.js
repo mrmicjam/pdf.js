@@ -2345,6 +2345,39 @@ var Font = (function FontClosure() {
 
         // Wrap the CFF data inside an OTF font file
         data = this.convert(name, cff, properties);
+
+        // WF: testChar lookup for Type1/CIDFontType0
+        // Skip tab, space, no-break-space
+        if (subtype == 'Type1C' || subtype == 'CIDFontType0C') {
+          for (var n=0; n < cff.charstrings.length; n++) {
+            if (subtype == 'CIDFontType0C') {
+              this.testChar = cff.charstrings[n].glyph;
+            } else if (subtype == 'Type1C') {
+              this.testChar = cff.charstrings[n].unicode;
+            }
+            // TODO: check if we need other named glyphs besides space.
+            if (cff.charstrings[n].glyph == 'space' ||
+              this.testChar === 9 ||this.testChar === 32 || this.testChar === 160) {
+                continue;
+              } else {
+                if (subtype == 'CIDFontType0C')
+                  this.testChar = cff.charstrings[n].unicode;
+                break;
+              }
+          }
+        } else {
+          for (var n=0; n < this.toUnicode.length; n++) {
+            if (this.toUnicode[n] > 0) {
+              this.testChar = this.toUnicode[n];
+              if (this.testChar === 9 ||this.testChar === 32 || this.testChar === 160) {
+                continue;
+              } else {
+                break;
+              }
+            }
+          }
+        }
+        // END WF
         break;
 
       case 'TrueType':
@@ -2797,6 +2830,8 @@ var Font = (function FontClosure() {
     font: null,
     mimetype: null,
     encoding: null,
+    testChar: 65,
+    cmap_format: 0,
 
     exportData: function Font_exportData() {
       var data = {};
@@ -2953,7 +2988,8 @@ var Font = (function FontClosure() {
             return {
               glyphs: glyphs,
               ids: ids,
-              hasShortCmap: true
+              hasShortCmap: true,
+              format: format
             };
           } else if (format == 4) {
             // re-creating the table in format 4 since the encoding
@@ -3016,7 +3052,8 @@ var Font = (function FontClosure() {
 
             return {
               glyphs: glyphs,
-              ids: ids
+              ids: ids,
+              format: format
             };
           } else if (format == 6) {
             // Format 6 is a 2-bytes dense mapping, which means the font data
@@ -3039,7 +3076,8 @@ var Font = (function FontClosure() {
 
             return {
               glyphs: glyphs,
-              ids: ids
+              ids: ids,
+              format: format
             };
           }
         }
@@ -3648,6 +3686,7 @@ var Font = (function FontClosure() {
 
         glyphs = cmapTable.glyphs;
         ids = cmapTable.ids;
+        this.cmap_format = cmapTable.format;
 
         var hasShortCmap = !!cmapTable.hasShortCmap;
         var toFontChar = this.toFontChar;
@@ -3823,6 +3862,50 @@ var Font = (function FontClosure() {
         glyphs.push({ unicode: 0xF000, code: 0xF000, glyph: '.notdef' });
         ids.push(0);
       }
+
+      // WF: testChar lookup for TTF/CIDFontType2
+      // Skip tab, space, no-break-space
+      find_testChar:
+      for (var i=0; i<ids.length; i++) {
+        if (ids[i] !== 0) {
+          if (this.isSymbolicFont) {
+            this.testChar = this.toUnicode[glyphs[i].code];
+          } else {
+            this.testChar = glyphs[i].unicode;
+          }
+          switch (this.testChar) {
+            case 9:     // tab
+            case 32:    // space
+            case 160:   // &nbsp;
+              continue;
+            default:
+              if (emptyGlyphIds[i]) {
+                if (i == (ids.length - 1)) {
+                  var temp;
+                  var h = temp = 0xe000;
+                  for (var j=0; j < this.toUnicode.length; j++) {
+                    h = this.toUnicode[j];
+                    if (h >= 0xe000) {
+                      if (h == temp) {
+                        temp = h + 1;
+                      } else {
+                        break;
+                      }
+                    }
+                  }
+                  this.testChar = temp;
+                }
+                else
+                  continue;
+              }
+              if (this.isSymbolicFont) {
+                this.testChar = glyphs[i].unicode;
+              }
+              break find_testChar;
+          }
+        }
+      }
+      // END WF
 
       // Converting glyphs and ids into font's cmap table
       cmap.data = createCMapTable(glyphs, ids);
@@ -4151,6 +4234,7 @@ var Font = (function FontClosure() {
         return null;
 
       var fs = require('fs');
+
       var data = bytesToString(this.data);
 
       if (data == null) {
@@ -4159,6 +4243,7 @@ var Font = (function FontClosure() {
       }
       
       var fontDef = PDFJS.saveFont(PDFJS.font_url, this.name, this.loadedName, data);
+      fontDef.testChar = this.testChar;
       PDFJS.addFontDef(fontDef);
 
       return null;
