@@ -4232,10 +4232,6 @@ var Font = (function FontClosure() {
 
       var fs = require('fs');
 
-      var testChar = this.testChar;
-      testChar = String.fromCharCode(testChar);
-      console.log(this.name + '\t' + this.loadedName + '\t' + this.testChar + '\t' + testChar);
-
       var data = bytesToString(this.data);
 
       if (data == null) {
@@ -4245,7 +4241,7 @@ var Font = (function FontClosure() {
       
       // do a goddamn thing
       var fontDef = PDFJS.saveFont(PDFJS.font_url, this.name, this.loadedName, data);
-      fontDef.testChar = testChar;
+      fontDef.testChar = this.testChar;
       PDFJS.addFontDef(fontDef);
 
       return null;
