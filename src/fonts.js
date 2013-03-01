@@ -2347,6 +2347,7 @@ var Font = (function FontClosure() {
         data = this.convert(name, cff, properties);
 
         // WF: testChar lookup for Type1/CIDFontType0
+        // Skip tab, space, no-break-space
         if (subtype == 'Type1C' || subtype == 'CIDFontType0C') {
           for (var n=0; n < cff.charstrings.length; n++) {
             if (subtype == 'CIDFontType0C') {
@@ -2354,6 +2355,7 @@ var Font = (function FontClosure() {
             } else if (subtype == 'Type1C') {
               this.testChar = cff.charstrings[n].unicode;
             }
+            // TODO: check if we need other named glyphs besides space.
             if (cff.charstrings[n].glyph == 'space' ||
               this.testChar === 9 ||this.testChar === 32 || this.testChar === 160) {
                 continue;
@@ -3862,6 +3864,7 @@ var Font = (function FontClosure() {
       }
 
       // WF: testChar lookup for TTF/CIDFontType2
+      // Skip tab, space, no-break-space
       find_testChar:
       for (var i=0; i<ids.length; i++) {
         if (ids[i] !== 0) {
@@ -3871,9 +3874,9 @@ var Font = (function FontClosure() {
             this.testChar = glyphs[i].unicode;
           }
           switch (this.testChar) {
-            case 9:
-            case 32:
-            case 160:
+            case 9:     // tab
+            case 32:    // space
+            case 160:   // &nbsp;
               continue;
             default:
               if (emptyGlyphIds[i]) {
