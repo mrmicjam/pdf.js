@@ -2347,7 +2347,7 @@ var Font = (function FontClosure() {
         data = this.convert(name, cff, properties);
 
         // WF: testChar lookup for Type1/CIDFontType0
-        // Skip tab, space, no-break-space
+        // Skip soft-hyphen and newline (LF or CR) as canvas remaps those glyphs.
         if (subtype == 'Type1C' || subtype == 'CIDFontType0C') {
           for (var n=0; n < cff.charstrings.length; n++) {
             if (subtype == 'CIDFontType0C') {
@@ -2355,21 +2355,23 @@ var Font = (function FontClosure() {
             } else if (subtype == 'Type1C') {
               this.testChar = cff.charstrings[n].unicode;
             }
-            // TODO: check if we need other named glyphs besides space.
-            if (cff.charstrings[n].glyph == 'space' ||
-              this.testChar === 9 ||this.testChar === 32 || this.testChar === 160) {
-                continue;
-              } else {
-                if (subtype == 'CIDFontType0C')
-                  this.testChar = cff.charstrings[n].unicode;
-                break;
+            if (this.testChar === 10 || this.testChar === 13 ||
+                this.testChar === 173 ||
+                cff.charstrings[n].glyph === 'softhyphen') {
+              continue;
+            } else {
+              if (subtype == 'CIDFontType0C') {
+                this.testChar = cff.charstrings[n].unicode;
               }
+              break;
+            }
           }
         } else {
           for (var n=0; n < this.toUnicode.length; n++) {
             if (this.toUnicode[n] > 0) {
               this.testChar = this.toUnicode[n];
-              if (this.testChar === 9 ||this.testChar === 32 || this.testChar === 160) {
+              if (this.testChar === 10 ||this.testChar === 13 ||
+                  this.testChar === 173) {
                 continue;
               } else {
                 break;
@@ -2830,7 +2832,7 @@ var Font = (function FontClosure() {
     font: null,
     mimetype: null,
     encoding: null,
-    testChar: 65,
+    testChar: 'A',
     cmap_format: 0,
 
     exportData: function Font_exportData() {
@@ -3864,46 +3866,48 @@ var Font = (function FontClosure() {
       }
 
       // WF: testChar lookup for TTF/CIDFontType2
-      // Skip tab, space, no-break-space
-      find_testChar:
-      for (var i=0; i<ids.length; i++) {
-        if (ids[i] !== 0) {
-          if (this.isSymbolicFont) {
-            this.testChar = this.toUnicode[glyphs[i].code];
-          } else {
-            this.testChar = glyphs[i].unicode;
           }
-          switch (this.testChar) {
-            case 9:     // tab
-            case 32:    // space
-            case 160:   // &nbsp;
-              continue;
-            default:
-              if (emptyGlyphIds[i]) {
-                if (i == (ids.length - 1)) {
-                  var temp;
-                  var h = temp = 0xe000;
-                  for (var j=0; j < this.toUnicode.length; j++) {
-                    h = this.toUnicode[j];
-                    if (h >= 0xe000) {
-                      if (h == temp) {
-                        temp = h + 1;
-                      } else {
-                        break;
-                      }
-                    }
-                  }
-                  this.testChar = temp;
-                }
-                else
-                  continue;
-              }
+      if (this.testChar === undefined) {
+          find_testChar:
+          for (var i = 0; i < ids_length; i++) {
+            if (ids[i] !== 0) {
               if (this.isSymbolicFont) {
+                this.testChar = this.toUnicode[glyphs[i].code];
+              } else {
                 this.testChar = glyphs[i].unicode;
               }
-              break find_testChar;
+              switch (this.testChar) {
+                case 10:    // LF
+                case 13:    // CR
+                case 173:   // soft-hyphen
+                  continue;
+                default:
+                  if (emptyGlyphIds[i]) {
+                    if (i == (ids.length - 1)) {
+                      var temp;
+                      var h = temp = 0xe000;
+                      for (var j=0; j < this.toUnicode.length; j++) {
+                        h = this.toUnicode[j];
+                        if (h >= 0xe000) {
+                          if (h == temp) {
+                            temp = h + 1;
+                          } else {
+                            break;
+                          }
+                        }
+                      }
+                      this.testChar = temp;
+                    }
+                    else
+                      continue;
+                  }
+                  if (this.isSymbolicFont) {
+                    this.testChar = glyphs[i].unicode;
+                  }
+                  break find_testChar;
+              }
+            }
           }
-        }
       }
       // END WF
 
