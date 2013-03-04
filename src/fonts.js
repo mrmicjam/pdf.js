@@ -3866,7 +3866,16 @@ var Font = (function FontClosure() {
       }
 
       // WF: testChar lookup for TTF/CIDFontType2
+      // Use 'A' if available.
+      var ids_length = ids.length;
+      for (var i = 0; i < ids_length; i++) {
+          if (ids[i] !== 0) {
+              if (glyphs[i].unicode === 0x41) {
+                  delete this.testChar;
+                  break;
+              }
           }
+      }
       if (this.testChar === undefined) {
           find_testChar:
           for (var i = 0; i < ids_length; i++) {
