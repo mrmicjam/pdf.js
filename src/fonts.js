@@ -2364,8 +2364,8 @@ var Font = (function FontClosure() {
               } else if (subtype == 'Type1C') {
                 testChar = cff.charstrings[n].unicode;
               }
-              if (testChar === 10 || testChar === 13 ||
-                  testChar === 173 ||
+              if (testChar === 32 || testChar === 10 ||
+                  testChar === 13 || testChar === 173 ||
                   cff.charstrings[n].glyph === 'softhyphen') {
                 continue;
               } else {
@@ -2389,8 +2389,8 @@ var Font = (function FontClosure() {
             var testChar = this.testChar;
             for (var n = 0; n < chars_length; n++) {
               testChar = this.toUnicode[n];
-              if (testChar === 0 || testChar === 10 ||
-                  testChar === 13 || testChar === 173) {
+              if (testChar === 0 || testChar === 32 ||
+                  testChar === 10 || testChar === 13 || testChar === 173) {
                 continue;
               } else {
                 break;
@@ -3907,6 +3907,7 @@ var Font = (function FontClosure() {
               testChar = glyphs[i].unicode;
             }
             switch (testChar) {
+              case 32:    // Space
               case 10:    // LF
               case 13:    // CR
               case 173:   // soft-hyphen
