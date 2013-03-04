@@ -2854,7 +2854,6 @@ var Font = (function FontClosure() {
     mimetype: null,
     encoding: null,
     testChar: null,   // default to 'A'
-    cmap_format: 0,
 
     exportData: function Font_exportData() {
       var data = {};
@@ -3709,7 +3708,6 @@ var Font = (function FontClosure() {
 
         glyphs = cmapTable.glyphs;
         ids = cmapTable.ids;
-        this.cmap_format = cmapTable.format;
 
         var hasShortCmap = !!cmapTable.hasShortCmap;
         var toFontChar = this.toFontChar;
