@@ -2347,12 +2347,13 @@ var Font = (function FontClosure() {
         data = this.convert(name, cff, properties);
 
         // WF: testChar lookup for Type1/CIDFontType0
-        // Skip soft-hyphen and newline (LF or CR) as canvas remaps those glyphs.
+        // Skip space, soft-hyphen, and newline (LF or CR).
+        // Canvas remaps those glyphs.
         if (subtype == 'Type1C' || subtype == 'CIDFontType0C') {
           var chars_length = cff.charstrings.length;
           for (var i = 0; i < chars_length; i++) {
             if (cff.charstrings[i].unicode === 0x41) {
-              delete this.testChar;
+              this.testChar = undefined;
               break;
             }
           }
@@ -2381,7 +2382,7 @@ var Font = (function FontClosure() {
           var chars_length = this.toUnicode.length;
           for (var i = 0; i < chars_length; i++) {
             if (this.toUnicode[i] === 0x41) {
-              delete this.testChar;
+              this.testChar = undefined;
               break;
             }
           }
@@ -2852,7 +2853,7 @@ var Font = (function FontClosure() {
     font: null,
     mimetype: null,
     encoding: null,
-    testChar: 65,
+    testChar: null,   // default to 'A'
     cmap_format: 0,
 
     exportData: function Font_exportData() {
@@ -3891,7 +3892,7 @@ var Font = (function FontClosure() {
       for (var i = 0; i < ids_length; i++) {
         if (ids[i] !== 0) {
           if (glyphs[i].unicode === 0x41) {
-            delete this.testChar;
+            this.testChar = undefined;
             break;
           }
         }
@@ -3906,6 +3907,8 @@ var Font = (function FontClosure() {
             } else {
               testChar = glyphs[i].unicode;
             }
+            // Skip space, soft-hyphen, and newline (LF or CR).
+            // Canvas remaps those glyphs.
             switch (testChar) {
               case 32:    // Space
               case 10:    // LF
