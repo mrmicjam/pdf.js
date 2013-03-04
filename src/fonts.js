@@ -2349,34 +2349,54 @@ var Font = (function FontClosure() {
         // WF: testChar lookup for Type1/CIDFontType0
         // Skip soft-hyphen and newline (LF or CR) as canvas remaps those glyphs.
         if (subtype == 'Type1C' || subtype == 'CIDFontType0C') {
-          for (var n=0; n < cff.charstrings.length; n++) {
-            if (subtype == 'CIDFontType0C') {
-              this.testChar = cff.charstrings[n].glyph;
-            } else if (subtype == 'Type1C') {
-              this.testChar = cff.charstrings[n].unicode;
-            }
-            if (this.testChar === 10 || this.testChar === 13 ||
-                this.testChar === 173 ||
-                cff.charstrings[n].glyph === 'softhyphen') {
-              continue;
-            } else {
-              if (subtype == 'CIDFontType0C') {
-                this.testChar = cff.charstrings[n].unicode;
-              }
+          var chars_length = cff.charstrings.length;
+          for (var i = 0; i < chars_length; i++) {
+            if (cff.charstrings[i].unicode === 0x41) {
+              delete this.testChar;
               break;
             }
           }
+          if (this.testChar !== undefined) {
+            var testChar = this.testChar;
+            for (var n=0; n < chars_length; n++) {
+              if (subtype == 'CIDFontType0C') {
+                testChar = cff.charstrings[n].glyph;
+              } else if (subtype == 'Type1C') {
+                testChar = cff.charstrings[n].unicode;
+              }
+              if (testChar === 10 || testChar === 13 ||
+                  testChar === 173 ||
+                  cff.charstrings[n].glyph === 'softhyphen') {
+                continue;
+              } else {
+                if (subtype == 'CIDFontType0C') {
+                  testChar = cff.charstrings[n].unicode;
+                }
+                break;
+              }
+            }
+            this.testChar = testChar;
+          }
         } else {
-          for (var n=0; n < this.toUnicode.length; n++) {
-            if (this.toUnicode[n] > 0) {
-              this.testChar = this.toUnicode[n];
-              if (this.testChar === 10 ||this.testChar === 13 ||
-                  this.testChar === 173) {
+          var chars_length = this.toUnicode.length;
+          for (var i = 0; i < chars_length; i++) {
+            if (this.toUnicode[i] === 0x41) {
+              delete this.testChar;
+              break;
+            }
+          }
+          if (this.testChar !== undefined) {
+            var testChar = this.testChar;
+            for (var n = 0; n < chars_length; n++) {
+              testChar = this.toUnicode[n];
+              if (testChar === 0 || testChar === 10 ||
+                  testChar === 13 || testChar === 173) {
                 continue;
               } else {
                 break;
               }
             }
+            this.testChar = testChar;
           }
         }
         // END WF
@@ -2832,7 +2852,7 @@ var Font = (function FontClosure() {
     font: null,
     mimetype: null,
     encoding: null,
-    testChar: 'A',
+    testChar: 65,
     cmap_format: 0,
 
     exportData: function Font_exportData() {
@@ -3869,54 +3889,56 @@ var Font = (function FontClosure() {
       // Use 'A' if available.
       var ids_length = ids.length;
       for (var i = 0; i < ids_length; i++) {
-          if (ids[i] !== 0) {
-              if (glyphs[i].unicode === 0x41) {
-                  delete this.testChar;
-                  break;
-              }
+        if (ids[i] !== 0) {
+          if (glyphs[i].unicode === 0x41) {
+            delete this.testChar;
+            break;
           }
+        }
       }
-      if (this.testChar === undefined) {
-          find_testChar:
-          for (var i = 0; i < ids_length; i++) {
-            if (ids[i] !== 0) {
-              if (this.isSymbolicFont) {
-                this.testChar = this.toUnicode[glyphs[i].code];
-              } else {
-                this.testChar = glyphs[i].unicode;
-              }
-              switch (this.testChar) {
-                case 10:    // LF
-                case 13:    // CR
-                case 173:   // soft-hyphen
-                  continue;
-                default:
-                  if (emptyGlyphIds[i]) {
-                    if (i == (ids.length - 1)) {
-                      var temp;
-                      var h = temp = 0xe000;
-                      for (var j=0; j < this.toUnicode.length; j++) {
-                        h = this.toUnicode[j];
-                        if (h >= 0xe000) {
-                          if (h == temp) {
-                            temp = h + 1;
-                          } else {
-                            break;
-                          }
+      if (this.testChar !== undefined) {
+        var testChar = this.testChar;
+        find_testChar:
+        for (var i = 0; i < ids_length; i++) {
+          if (ids[i] !== 0) {
+            if (this.isSymbolicFont) {
+              testChar = this.toUnicode[glyphs[i].code];
+            } else {
+              testChar = glyphs[i].unicode;
+            }
+            switch (testChar) {
+              case 10:    // LF
+              case 13:    // CR
+              case 173:   // soft-hyphen
+                continue;
+              default:
+                if (emptyGlyphIds[i]) {
+                  if (i == (ids.length - 1)) {
+                    var temp;
+                    var h = temp = 0xe000;
+                    for (var j=0; j < this.toUnicode.length; j++) {
+                      h = this.toUnicode[j];
+                      if (h >= 0xe000) {
+                        if (h == temp) {
+                          temp = h + 1;
+                        } else {
+                          break;
                         }
                       }
-                      this.testChar = temp;
                     }
-                    else
-                      continue;
+                    testChar = temp;
                   }
-                  if (this.isSymbolicFont) {
-                    this.testChar = glyphs[i].unicode;
-                  }
-                  break find_testChar;
-              }
+                  else
+                    continue;
+                }
+                if (this.isSymbolicFont) {
+                  testChar = glyphs[i].unicode;
+                }
+                break find_testChar;
             }
           }
+        }
+        this.testChar = testChar;
       }
       // END WF
 
