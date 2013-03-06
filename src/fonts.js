@@ -2345,6 +2345,62 @@ var Font = (function FontClosure() {
 
         // Wrap the CFF data inside an OTF font file
         data = this.convert(name, cff, properties);
+
+        // WF: testChar lookup for Type1/CIDFontType0
+        // Skip space, soft-hyphen, and newline (LF or CR).
+        // Canvas remaps those glyphs.
+        if (subtype == 'Type1C' || subtype == 'CIDFontType0C') {
+          var chars_length = cff.charstrings.length;
+          for (var i = 0; i < chars_length; i++) {
+            if (cff.charstrings[i].unicode === 0x41) {
+              this.testChar = undefined;
+              break;
+            }
+          }
+          if (this.testChar !== undefined) {
+            var testChar = this.testChar;
+            for (var n=0; n < chars_length; n++) {
+              if (subtype == 'CIDFontType0C') {
+                testChar = cff.charstrings[n].glyph;
+              } else if (subtype == 'Type1C') {
+                testChar = cff.charstrings[n].unicode;
+              }
+              if (testChar === 10 || testChar === 13 ||
+                  testChar === 173 ||
+                  cff.charstrings[n].glyph === 'softhyphen') {
+                continue;
+              } else {
+                if (subtype == 'CIDFontType0C') {
+                  testChar = cff.charstrings[n].unicode;
+                }
+                break;
+              }
+            }
+            this.testChar = testChar;
+          }
+        } else {
+          var chars_length = this.toUnicode.length;
+          for (var i = 0; i < chars_length; i++) {
+            if (this.toUnicode[i] === 0x41) {
+              this.testChar = undefined;
+              break;
+            }
+          }
+          if (this.testChar !== undefined) {
+            var testChar = this.testChar;
+            for (var n = 0; n < chars_length; n++) {
+              testChar = this.toUnicode[n];
+              if (testChar === 0 || testChar === 10 ||
+                  testChar === 13 || testChar === 173) {
+                continue;
+              } else {
+                break;
+              }
+            }
+            this.testChar = testChar;
+          }
+        }
+        // END WF
         break;
 
       case 'TrueType':
@@ -2797,6 +2853,7 @@ var Font = (function FontClosure() {
     font: null,
     mimetype: null,
     encoding: null,
+    testChar: null,   // default to 'A'
 
     exportData: function Font_exportData() {
       var data = {};
@@ -2953,7 +3010,8 @@ var Font = (function FontClosure() {
             return {
               glyphs: glyphs,
               ids: ids,
-              hasShortCmap: true
+              hasShortCmap: true,
+              format: format
             };
           } else if (format == 4) {
             // re-creating the table in format 4 since the encoding
@@ -3016,7 +3074,8 @@ var Font = (function FontClosure() {
 
             return {
               glyphs: glyphs,
-              ids: ids
+              ids: ids,
+              format: format
             };
           } else if (format == 6) {
             // Format 6 is a 2-bytes dense mapping, which means the font data
@@ -3039,7 +3098,8 @@ var Font = (function FontClosure() {
 
             return {
               glyphs: glyphs,
-              ids: ids
+              ids: ids,
+              format: format
             };
           }
         }
@@ -3824,6 +3884,65 @@ var Font = (function FontClosure() {
         ids.push(0);
       }
 
+      // WF: testChar lookup for TTF/CIDFontType2
+      // Use 'A' if available.
+      var ids_length = ids.length;
+      for (var i = 0; i < ids_length; i++) {
+        if (ids[i] !== 0) {
+          if (glyphs[i].unicode === 0x41) {
+            this.testChar = undefined;
+            break;
+          }
+        }
+      }
+      if (this.testChar !== undefined) {
+        var testChar = this.testChar;
+        find_testChar:
+        for (var i = 0; i < ids_length; i++) {
+          if (ids[i] !== 0) {
+            if (this.isSymbolicFont) {
+              testChar = this.toUnicode[glyphs[i].code];
+            } else {
+              testChar = glyphs[i].unicode;
+            }
+            // Skip space, soft-hyphen, and newline (LF or CR).
+            // Canvas remaps those glyphs.
+            switch (testChar) {
+              case 10:    // LF
+              case 13:    // CR
+              case 173:   // soft-hyphen
+                continue;
+              default:
+                if (emptyGlyphIds[i]) {
+                  if (i == (ids.length - 1)) {
+                    var temp;
+                    var h = temp = 0xe000;
+                    for (var j=0; j < this.toUnicode.length; j++) {
+                      h = this.toUnicode[j];
+                      if (h >= 0xe000) {
+                        if (h == temp) {
+                          temp = h + 1;
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    testChar = temp;
+                  }
+                  else
+                    continue;
+                }
+                if (this.isSymbolicFont) {
+                  testChar = glyphs[i].unicode;
+                }
+                break find_testChar;
+            }
+          }
+        }
+        this.testChar = testChar;
+      }
+      // END WF
+
       // Converting glyphs and ids into font's cmap table
       cmap.data = createCMapTable(glyphs, ids);
       var unicodeIsEnabled = [];
@@ -4151,6 +4270,7 @@ var Font = (function FontClosure() {
         return null;
 
       var fs = require('fs');
+
       var data = bytesToString(this.data);
 
       if (data == null) {
@@ -4159,6 +4279,7 @@ var Font = (function FontClosure() {
       }
       
       var fontDef = PDFJS.saveFont(PDFJS.font_url, this.name, this.loadedName, data);
+      fontDef.testChar = this.testChar;
       PDFJS.addFontDef(fontDef);
 
       return null;
