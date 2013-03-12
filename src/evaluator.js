@@ -290,7 +290,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
             width: w,
             height: h,
           };
-          PDFJS.saveImg(image.bytes, w, h, 'jpg');
+          imageData.path = PDFJS.saveImg(image.bytes, w, h, 'jpg');
           handler.send('obj', [objId, pageIndex, 'JpegStream', imageData]);
           return;
         }
@@ -299,7 +299,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
 
         PDFImage.buildImage(function(imageObj) {
             var imgData = imageObj.getImageData();
-            PDFJS.saveImg(imgData.data, w, h, 'png');
+            imgData.path = PDFJS.saveImg(imgData.data, w, h, 'png');
             handler.send('obj', [objId, pageIndex, 'Image', imgData]);
           }, handler, xref, resources, image, inline);
       }
