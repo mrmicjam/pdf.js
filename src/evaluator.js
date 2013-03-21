@@ -291,6 +291,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
             height: h,
           };
           imageData.path = PDFJS.saveImage(image.bytes, w, h, 'jpg');
+          image.bytes = [];
           handler.send('obj', [objId, pageIndex, 'JpegStream', imageData]);
           return;
         }
@@ -300,6 +301,8 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
         PDFImage.buildImage(function(imageObj) {
             var imgData = imageObj.getImageData();
             imgData.path = PDFJS.saveImage(imgData.data, w, h, 'png');
+            imgData.data = [];
+            image.bytes = [];
             handler.send('obj', [objId, pageIndex, 'Image', imgData]);
           }, handler, xref, resources, image, inline);
       }

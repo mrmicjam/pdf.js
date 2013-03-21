@@ -4282,6 +4282,8 @@ var Font = (function FontClosure() {
       fontDef.testChar = this.testChar;
       PDFJS.addFontDef(fontDef);
 
+      this.data = [];
+
       return null;
       /*
       var fontName = this.loadedName;
