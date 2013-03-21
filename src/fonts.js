@@ -2347,59 +2347,11 @@ var Font = (function FontClosure() {
         data = this.convert(name, cff, properties);
 
         // WF: testChar lookup for Type1/CIDFontType0
-        // Skip space, soft-hyphen, and newline (LF or CR).
-        // Canvas remaps those glyphs.
-        if (subtype == 'Type1C' || subtype == 'CIDFontType0C') {
-          var chars_length = cff.charstrings.length;
-          for (var i = 0; i < chars_length; i++) {
-            if (cff.charstrings[i].unicode === 0x41) {
-              this.testChar = undefined;
-              break;
-            }
-          }
-          if (this.testChar !== undefined) {
-            var testChar = this.testChar;
-            for (var n=0; n < chars_length; n++) {
-              if (subtype == 'CIDFontType0C') {
-                testChar = cff.charstrings[n].glyph;
-              } else if (subtype == 'Type1C') {
-                testChar = cff.charstrings[n].unicode;
-              }
-              if (testChar === 10 || testChar === 13 ||
-                  testChar === 173 ||
-                  cff.charstrings[n].glyph === 'softhyphen') {
-                continue;
-              } else {
-                if (subtype == 'CIDFontType0C') {
-                  testChar = cff.charstrings[n].unicode;
-                }
-                break;
-              }
-            }
-            this.testChar = testChar;
-          }
-        } else {
-          var chars_length = this.toUnicode.length;
-          for (var i = 0; i < chars_length; i++) {
-            if (this.toUnicode[i] === 0x41) {
-              this.testChar = undefined;
-              break;
-            }
-          }
-          if (this.testChar !== undefined) {
-            var testChar = this.testChar;
-            for (var n = 0; n < chars_length; n++) {
-              testChar = this.toUnicode[n];
-              if (testChar === 0 || testChar === 10 ||
-                  testChar === 13 || testChar === 173) {
-                continue;
-              } else {
-                break;
-              }
-            }
-            this.testChar = testChar;
-          }
-        }
+        PDFJS.findTestChar({type: 'type1/cid',
+                            subtype: subtype,
+                            cff: cff,
+                            emptyGlyphIds: emptyGlyphIds}
+                          );
         // END WF
         break;
 
@@ -3885,62 +3837,11 @@ var Font = (function FontClosure() {
       }
 
       // WF: testChar lookup for TTF/CIDFontType2
-      // Use 'A' if available.
-      var ids_length = ids.length;
-      for (var i = 0; i < ids_length; i++) {
-        if (ids[i] !== 0) {
-          if (glyphs[i].unicode === 0x41) {
-            this.testChar = undefined;
-            break;
-          }
-        }
-      }
-      if (this.testChar !== undefined) {
-        var testChar = this.testChar;
-        find_testChar:
-        for (var i = 0; i < ids_length; i++) {
-          if (ids[i] !== 0) {
-            if (this.isSymbolicFont) {
-              testChar = this.toUnicode[glyphs[i].code];
-            } else {
-              testChar = glyphs[i].unicode;
-            }
-            // Skip space, soft-hyphen, and newline (LF or CR).
-            // Canvas remaps those glyphs.
-            switch (testChar) {
-              case 10:    // LF
-              case 13:    // CR
-              case 173:   // soft-hyphen
-                continue;
-              default:
-                if (emptyGlyphIds[i]) {
-                  if (i == (ids.length - 1)) {
-                    var temp;
-                    var h = temp = 0xe000;
-                    for (var j=0; j < this.toUnicode.length; j++) {
-                      h = this.toUnicode[j];
-                      if (h >= 0xe000) {
-                        if (h == temp) {
-                          temp = h + 1;
-                        } else {
-                          break;
-                        }
-                      }
-                    }
-                    testChar = temp;
-                  }
-                  else
-                    continue;
-                }
-                if (this.isSymbolicFont) {
-                  testChar = glyphs[i].unicode;
-                }
-                break find_testChar;
-            }
-          }
-        }
-        this.testChar = testChar;
-      }
+      PDFJS.findTestChar({type: 'ttf/type2',
+                          ids: ids,
+                          glyphs: glyphs,
+                          emptyGlyphIds: emptyGlyphIds}
+                        );
       // END WF
 
       // Converting glyphs and ids into font's cmap table
