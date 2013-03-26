@@ -2347,11 +2347,8 @@ var Font = (function FontClosure() {
         data = this.convert(name, cff, properties);
 
         // WF: testChar lookup for Type1/CIDFontType0
-        PDFJS.findTestChar({type: 'type1/cid',
-                            subtype: subtype,
-                            cff: cff,
-                            emptyGlyphIds: emptyGlyphIds}
-                          );
+        PDFJS.findType1TestChar(this, cff, properties);
+        //PDFJS.findTestChar({type:properties.type, font:this, cff:cff, properties:properties});
         // END WF
         break;
 
@@ -3837,11 +3834,8 @@ var Font = (function FontClosure() {
       }
 
       // WF: testChar lookup for TTF/CIDFontType2
-      PDFJS.findTestChar({type: 'ttf/type2',
-                          ids: ids,
-                          glyphs: glyphs,
-                          emptyGlyphIds: emptyGlyphIds}
-                        );
+      PDFJS.findType2TestChar(this, ids, glyphs, emptyGlyphIds);
+      //PDFJS.findTestChar({type:properties.type, font:this, ids:ids, glyphs:glyphs, emptyGlyphIds:emptyGlyphIds});
       // END WF
 
       // Converting glyphs and ids into font's cmap table
