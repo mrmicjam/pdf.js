@@ -2348,7 +2348,6 @@ var Font = (function FontClosure() {
 
         // WF: testChar lookup for Type1/CIDFontType0
         PDFJS.findType1TestChar(this, cff, properties);
-        //PDFJS.findTestChar({type:properties.type, font:this, cff:cff, properties:properties});
         // END WF
         break;
 
@@ -3835,7 +3834,6 @@ var Font = (function FontClosure() {
 
       // WF: testChar lookup for TTF/CIDFontType2
       PDFJS.findType2TestChar(this, ids, glyphs, emptyGlyphIds);
-      //PDFJS.findTestChar({type:properties.type, font:this, ids:ids, glyphs:glyphs, emptyGlyphIds:emptyGlyphIds});
       // END WF
 
       // Converting glyphs and ids into font's cmap table
