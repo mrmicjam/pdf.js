@@ -409,6 +409,14 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
 
             PDFImage.buildImage(function(imageObj) {
                 var imgData = imageObj.getImageData();
+                if (imgData !== undefined) {
+                    if (imgData.width) {
+                        w = imgData.width;
+                    }
+                    if (imgData.width) {
+                        h = imgData.height;
+                    }
+                }
                 imgData.path = PDFJS.saveImage(imgData.data, w, h, 'png');
                 handler.send('obj', [objId, pageIndex, 'Image', imgData]);
               }, handler, xref, resources, image, inline);
