@@ -290,109 +290,15 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
                 height: h
             };
 
-            var convert_image = function (callback, image, format, negate) {
-                /**
-                 * Push image data through stdin to ImageMagick for conversion
-                 * to rgb. Capture stdout as our new image.
-                 * @param {function} callback - run when complete
-                 * @param {obj} image - object to convert and update
-                 *                      input: .bytes base64 image buffer
-                 *                      output: .data base64 image buffer
-                 * @param {string} format - target image format
-                 * @param {bool} negate - should invert image?
-                 *
-                 * Note: PDFImage.buildImage() creates an image.data rgba buffer. But
-                 * this results in updated jpeg data in image.bytes not rgba.
-                 *
-                 * Manual example with invert, resampling to 72dpi, convert to
-                 * rgb and strip metadata:
-                 * `cat image.jpg | convert jpg:- -negate -density 72x72 /
-                 * -resample 72x72 -colorspace rgb -strip jpg:- > new_image.jpg`
-                 */
-
-                var child_process = require('child_process');
-
-                if (!Buffer.isBuffer(image.bytes)) {
-                    image.bytes = new Buffer(image.bytes, 'base64');
-                }
-                if (format === undefined) {
-                    format = 'jpg';
-                }
-
-                var cmd = 'convert'
-                var args = [
-                    'jpg:-',
-                    '-colorspace', 'rgb',
-                    format + ":-"
-                ];
-                if (negate !== undefined) {
-                    args.splice(1, 0, '-negate');
-                }
-
-                var child = child_process.spawn(cmd, args);
-                var received = 0;
-                var receivedBuffers = [];
-
-                child.stdout.on("data", function (data) {
-                    receivedBuffers.push(data);
-                    received += data.length;
-                });
-
-                child.stderr.on("data", function (data) {
-                    console.error('Image conversion failure. stderr',
-                                  data.toString());
-                });
-
-                child.on("close", function (code) {
-                    if (image.bytes.length < received) {
-                        image.bytes = new Buffer(received);
-                    } else {
-                        image.bytes = image.bytes.slice(0, received);
-                    }
-                    var i = 0;
-                    receivedBuffers.forEach(function (data) {
-                        data.copy(image.bytes, i, 0, data.length);
-                        i += data.length;
-                    });
-                    callback(image);
-                });
-
-                child.stdin.write(image.bytes);
-                child.stdin.end();
-            };
-
             if (!image.isNativelySupported(xref, resources)) {
-                // Is a negative image?
-                // pdfjs PDFImage() checks for dict.colorTransform=-1 in
-                // jpeg header in constructor JpegStream().
-                // Special Case:
-                // CMYK with non-inverted colorspace should not be inverted
-                // despite colorTransform defaulting to negate operation:
-                //  colors range from
-                //  [1,0,...] = 1, min, to 0, max instead of
-                //  [0,1,...] = 0, min, to 1, max ('negate')
-                if (image.colorTransform === -1) {
-                    var invert = true;
-                    var decode = image.dict.get('Decode');
-                    if (decode !== undefined) {
-                        var negate = [ 0, 1, 0, 1, 0, 1, 0, 1 ];
-                        for (var i=0; i<decode.length; i++) {
-                            if (decode[i] !== negate[i]) {
-                                invert = false;
-                                break;
-                            }
-                        }
-                    }
-                }
 
-                convert_image(function (image) {
+                PDFJS.convertImage(function (image) {
                         imageData.path = PDFJS.saveImage(image.bytes, w, h, 'jpg');
                         handler.send('obj',
                                      [objId, pageIndex, 'JpegStream', imageData]);
                     },
                     image,
-                    'jpg',
-                    invert);
+                    'jpg');
             } else {
                 // No conversion needed for natively supported jpeg rgb.
                 imageData.path = PDFJS.saveImage(image.bytes, w, h, 'jpg');
