@@ -409,8 +409,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
 
             PDFImage.buildImage(function(imageObj) {
                 var imgData = imageObj.getImageData();
-                var returns = PDFJS.saveImage(imgData.data, w, h, 'png');
-                imgData.path = returns.name;
+                imgData.path = PDFJS.saveImage(imgData.data, w, h, 'png');
                 handler.send('obj', [objId, pageIndex, 'Image', imgData]);
               }, handler, xref, resources, image, inline);
         }
