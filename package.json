@@ -1,0 +1,23 @@
+{
+  "name": "pdfjs",
+  "version": "0.0.0",
+  "description": "The PDF.js source code",
+  "main": "make.js",
+  "directories": {
+    "example": "examples",
+    "test": "test"
+  },
+  "dependencies": {
+    "xml2js": "~0.2.6",
+    "btoa": "~1.1.0",
+    "pngjs": "~0.4.0-alpha"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "node make generic"
+  },
+  "repository": "",
+  "author": "",
+  "license": "-",
+  "readmeFilename": "README.md"
+}
