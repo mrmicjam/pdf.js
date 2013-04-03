@@ -282,6 +282,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
         insertDependency([objId]);
         args = [objId, w, h];
 
+        // WF convert through ImageMagick
         if (image instanceof JpegStream) {
             fn = 'paintJpegXObject';
 
@@ -290,8 +291,12 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
                 height: h
             };
 
-            if (!image.isNativelySupported(xref, resources)) {
-
+            if (image.isNativelySupported(xref, resources)) {
+                // No conversion needed for natively supported jpeg rgb.
+                imageData.path = PDFJS.saveImage(image.bytes, w, h, 'jpg');
+                handler.send('obj',
+                             [objId, pageIndex, 'JpegStream', imageData]);
+            } else {
                 PDFJS.convertImage(function (image) {
                         imageData.path = PDFJS.saveImage(image.bytes, w, h, 'jpg');
                         handler.send('obj',
@@ -299,11 +304,6 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
                     },
                     image,
                     'jpg');
-            } else {
-                // No conversion needed for natively supported jpeg rgb.
-                imageData.path = PDFJS.saveImage(image.bytes, w, h, 'jpg');
-                handler.send('obj',
-                             [objId, pageIndex, 'JpegStream', imageData]);
             }
 
             if (!softMask && !mask) {
@@ -327,6 +327,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
                 handler.send('obj', [objId, pageIndex, 'Image', imgData]);
               }, handler, xref, resources, image, inline);
         }
+        // END WF
       }
 
       if (!queue)
