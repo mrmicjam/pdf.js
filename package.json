@@ -1,20 +1,23 @@
 {
-  "name": "pdf.js",
-  "version": "0.7.169",
+  "name": "pdfjs",
+  "version": "0.0.0",
+  "description": "The PDF.js source code",
+  "main": "make.js",
+  "directories": {
+    "example": "examples",
+    "test": "test"
+  },
   "dependencies": {
-    "jshint": "git://github.com/jshint/jshint.git#42ace75a"
+    "xml2js": "~0.2.6",
+    "btoa": "~1.1.0",
+    "pngjs": "~0.4.0-alpha"
   },
+  "devDependencies": {},
   "scripts": {
-    "test": "node make lint"
+    "test": "node make generic"
   },
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/mozilla/pdf.js.git"
-  },
-  "licenses": [
-    {
-      "type": "Apache v2",
-      "url": "https://github.com/mozilla/pdf.js/blob/master/LICENSE"
-    }
-  ]
+  "repository": "",
+  "author": "",
+  "license": "-",
+  "readmeFilename": "README.md"
 }
