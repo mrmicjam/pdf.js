@@ -549,7 +549,7 @@ def getTestBrowsers(options):
 
 def setUp(options):
     # Only serve files from a pdf.js clone
-    assert not GIT_CLONE_CHECK or os.path.isfile('../src/pdf.js') and os.path.isdir('../.git')
+    #assert not GIT_CLONE_CHECK or os.path.isfile('src/pdf.js') and os.path.isdir('../.git')
 
     if options.masterMode and os.path.isdir(TMPDIR):
         print 'Temporary snapshot dir tmp/ is still around.'
@@ -589,7 +589,7 @@ def setUp(options):
 
 def setUpUnitTests(options):
     # Only serve files from a pdf.js clone
-    assert not GIT_CLONE_CHECK or os.path.isfile('../src/pdf.js') and os.path.isdir('../.git')
+    #assert not GIT_CLONE_CHECK or os.path.isfile('src/pdf.js') and os.path.isdir('../.git')
 
     testBrowsers = getTestBrowsers(options)
 

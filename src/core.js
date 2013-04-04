@@ -32,7 +32,7 @@ var verbosity = WARNINGS;
 // In production, it will be declared outside a global wrapper
 // In development, it will be declared here
 if (!globalScope.PDFJS) {
-  globalScope.PDFJS = {};
+  globalScope.PDFJS = PDFJS;
 }
 
 // getPdf()

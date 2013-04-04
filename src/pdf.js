@@ -28,5 +28,4 @@ var PDFJS = {};
   'use strict';
 
 //#expand __BUNDLE__
-
 }).call((typeof window === 'undefined') ? this : window);

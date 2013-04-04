@@ -39,7 +39,8 @@ var ROOT_DIR = __dirname + '/', // absolute path to project's root
     MOZCENTRAL_PREF_PREFIX = 'pdfjs',
     FIREFOX_PREF_PREFIX = 'extensions.uriloader@pdf.js',
     MOZCENTRAL_STREAM_CONVERTER_ID = 'd0c5195d-e798-49d4-b1d3-9324328b2291',
-    FIREFOX_STREAM_CONVERTER_ID = '6457a96b-2d68-439a-bcfa-44465fbcdbb1';
+    FIREFOX_STREAM_CONVERTER_ID = '6457a96b-2d68-439a-bcfa-44465fbcdbb1',
+    NODE_MOD_DIR = BUILD_DIR + 'node_modules/';
 
 var DEFINES = {
   PRODUCTION: true,
@@ -94,6 +95,9 @@ target.generic = function() {
   mkdir('-p', GENERIC_DIR + BUILD_DIR);
   mkdir('-p', GENERIC_DIR + '/web');
 
+  rm('-rf', NODE_MOD_DIR);
+  mkdir('-p', NODE_MOD_DIR);
+
   var defines = builder.merge(DEFINES, {GENERIC: true});
 
   var setup = {
@@ -103,7 +107,8 @@ target.generic = function() {
       ['external/webL10n/l10n.js', GENERIC_DIR + '/web'],
       ['web/compatibility.js', GENERIC_DIR + '/web'],
       ['web/compressed.tracemonkey-pldi-09.pdf', GENERIC_DIR + '/web'],
-      ['web/locale', GENERIC_DIR + '/web']
+      ['web/locale', GENERIC_DIR + '/web'],
+      ['build/pdf.js', NODE_MOD_DIR]
     ],
     preprocess: [
       [BUILD_TARGET, GENERIC_DIR + BUILD_TARGET],

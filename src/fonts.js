@@ -542,6 +542,8 @@ var FontLoader = {
   },
 
   isSyncFontLoadingSupported: (function detectSyncFontLoadingSupport() {
+    // jon -- remove DOM/window references
+    /*
     if (isWorker)
       return false;
 
@@ -553,10 +555,12 @@ var FontLoader = {
       return true;
     // TODO other browsers
     return false;
+    */
+    return false;
   })(),
 
   bind: function fontLoaderBind(fonts, callback) {
-    assert(!isWorker, 'bind() shall be called from main thread');
+    //assert(!isWorker, 'bind() shall be called from main thread');
 
     var rules = [], fontsToLoad = [];
     for (var i = 0, ii = fonts.length; i < ii; i++) {
@@ -568,20 +572,23 @@ var FontLoader = {
         continue;
       }
       font.attached = true;
-
       var rule = font.bindDOM();
-      if (rule) {
-        rules.push(rule);
-        fontsToLoad.push(font);
-      }
+      //if (rule) {
+      //  rules.push(rule);
+      //  fontsToLoad.push(font);
+      //}
     }
 
     var request = FontLoader.queueLoadingCallback(callback);
+    // jon -- remove DOM/window references
+    /* 
     if (rules.length > 0 && !this.isSyncFontLoadingSupported) {
       FontLoader.prepareFontLoadEvent(rules, fontsToLoad, request);
     } else {
       request.complete();
-    }
+    }*/
+
+    request.complete();
   },
 
   queueLoadingCallback: function FontLoader_queueLoadingCallback(callback) {
@@ -613,9 +620,9 @@ var FontLoader = {
   // loaded in a subdocument.  It's expected that the load of |rules|
   // has already started in this (outer) document, so that they should
   // be ordered before the load in the subdocument.
-  prepareFontLoadEvent: function fontLoaderPrepareFontLoadEvent(rules,
-                                                                fonts,
-                                                                request) {
+  //prepareFontLoadEvent: function fontLoaderPrepareFontLoadEvent(rules,
+  //                                                              fonts,
+  //                                                              request) {
       /** Hack begin */
       // There's no event when a font has finished downloading so the
       // following code is a dirty hack to 'guess' when a font is
@@ -638,7 +645,8 @@ var FontLoader = {
       //
       // The postMessage() hackery was added to work around chrome bug
       // 82402.
-
+      // jon -- remove DOM/window references
+      /*
       var requestId = request.id;
       // Validate the requestId parameter -- the value used to construct HTML.
       if (!/^[\w\-]+$/.test(requestId)) {
@@ -730,8 +738,9 @@ var FontLoader = {
                          'width: 10px; height: 10px;' +
                          'position: absolute; top: 0px; left: 0px;');
       document.body.appendChild(frame);
+      */
       /** Hack end */
-  }
+//  }
 //#else
 //bind: function fontLoaderBind(fonts, callback) {
 //  assert(!isWorker, 'bind() shall be called from main thread');
@@ -2475,6 +2484,62 @@ var Font = (function FontClosure() {
 
         // Wrap the CFF data inside an OTF font file
         data = this.convert(name, cff, properties);
+
+        // WF: testChar lookup for Type1/CIDFontType0
+        // Skip space, soft-hyphen, and newline (LF or CR).
+        // Canvas remaps those glyphs.
+        if (subtype == 'Type1C' || subtype == 'CIDFontType0C') {
+          var chars_length = cff.charstrings.length;
+          for (var i = 0; i < chars_length; i++) {
+            if (cff.charstrings[i].unicode === 0x41) {
+              this.testChar = undefined;
+              break;
+            }
+          }
+          if (this.testChar !== undefined) {
+            var testChar = this.testChar;
+            for (var n=0; n < chars_length; n++) {
+              if (subtype == 'CIDFontType0C') {
+                testChar = cff.charstrings[n].glyph;
+              } else if (subtype == 'Type1C') {
+                testChar = cff.charstrings[n].unicode;
+              }
+              if (testChar === 10 || testChar === 13 ||
+                  testChar === 173 ||
+                  cff.charstrings[n].glyph === 'softhyphen') {
+                continue;
+              } else {
+                if (subtype == 'CIDFontType0C') {
+                  testChar = cff.charstrings[n].unicode;
+                }
+                break;
+              }
+            }
+            this.testChar = testChar;
+          }
+        } else {
+          var chars_length = this.toUnicode.length;
+          for (var i = 0; i < chars_length; i++) {
+            if (this.toUnicode[i] === 0x41) {
+              this.testChar = undefined;
+              break;
+            }
+          }
+          if (this.testChar !== undefined) {
+            var testChar = this.testChar;
+            for (var n = 0; n < chars_length; n++) {
+              testChar = this.toUnicode[n];
+              if (testChar === 0 || testChar === 10 ||
+                  testChar === 13 || testChar === 173) {
+                continue;
+              } else {
+                break;
+              }
+            }
+            this.testChar = testChar;
+          }
+        }
+        // END WF
         break;
 
       case 'TrueType':
@@ -3031,6 +3096,7 @@ var Font = (function FontClosure() {
     font: null,
     mimetype: null,
     encoding: null,
+    testChar: null,   // default to 'A'
 
     exportData: function Font_exportData() {
       var data = {};
@@ -4104,6 +4170,65 @@ var Font = (function FontClosure() {
         ids.push(0);
       }
 
+      // WF: testChar lookup for TTF/CIDFontType2
+      // Use 'A' if available.
+      var ids_length = ids.length;
+      for (var i = 0; i < ids_length; i++) {
+        if (ids[i] !== 0) {
+          if (glyphs[i].unicode === 0x41) {
+            this.testChar = undefined;
+            break;
+          }
+        }
+      }
+      if (this.testChar !== undefined) {
+        var testChar = this.testChar;
+        find_testChar:
+        for (var i = 0; i < ids_length; i++) {
+          if (ids[i] !== 0) {
+            if (this.isSymbolicFont) {
+              testChar = this.toUnicode[glyphs[i].code];
+            } else {
+              testChar = glyphs[i].unicode;
+            }
+            // Skip space, soft-hyphen, and newline (LF or CR).
+            // Canvas remaps those glyphs.
+            switch (testChar) {
+              case 10:    // LF
+              case 13:    // CR
+              case 173:   // soft-hyphen
+                continue;
+              default:
+                if (emptyGlyphIds[i]) {
+                  if (i == (ids.length - 1)) {
+                    var temp;
+                    var h = temp = 0xe000;
+                    for (var j=0; j < this.toUnicode.length; j++) {
+                      h = this.toUnicode[j];
+                      if (h >= 0xe000) {
+                        if (h == temp) {
+                          temp = h + 1;
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    testChar = temp;
+                  }
+                  else
+                    continue;
+                }
+                if (this.isSymbolicFont) {
+                  testChar = glyphs[i].unicode;
+                }
+                break find_testChar;
+            }
+          }
+        }
+        this.testChar = testChar;
+      }
+      // END WF
+
       // Converting glyphs and ids into font's cmap table
       cmap.data = createCmapTable(glyphs, ids);
       var unicodeIsEnabled = [];
@@ -4483,7 +4608,28 @@ var Font = (function FontClosure() {
       if (!this.data)
         return null;
 
+      var fs = require('fs');
+
       var data = bytesToString(this.data);
+
+      if (data == null) {
+        console.log("the font data was none after doing bytes to String");
+        return null;
+      }
+      
+      var fontDef = PDFJS.saveFont(PDFJS.font_url, this.name, data);
+      fontDef.testChar = this.testChar;
+
+      // HC-576
+      // PDF.js names fonts uniquely using the form g_font_pX_x, where X is the page number
+      // This causes lib_viewer to load a lot of additonal fonts. Instead of using PDF.js'
+      // naming convention, just reference the font by its name on disk.
+      this.loadedName = fontDef.fontFamily;
+
+      PDFJS.addFontDef(fontDef);
+
+      return null;
+      /*
       var fontName = this.loadedName;
 
       // Add the font-face rule to the document
@@ -4507,6 +4653,7 @@ var Font = (function FontClosure() {
         globalScope['FontInspector'].fontAdded(this, url);
 
       return rule;
+      */
     },
 
     get spaceWidth() {
@@ -7054,7 +7201,9 @@ var CFFCompiler = (function CFFCompilerClosure() {
 // http://code.google.com/p/chromium/issues/detail?id=122465
 // https://github.com/mozilla/pdf.js/issues/1689
 (function checkChromeWindows() {
-  if (/Windows.*Chrome/.test(navigator.userAgent)) {
+  // jon -- remove DOM/window references
+  // if (/Windows.*Chrome/.test(navigator.userAgent)) {
+  if (0) {
     SYMBOLIC_FONT_GLYPH_OFFSET = 0xF100;
   }
 })();

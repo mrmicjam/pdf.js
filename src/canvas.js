@@ -38,10 +38,13 @@ var TextRenderingMode = {
 // Minimal font size that would be used during canvas fillText operations.
 var MIN_FONT_SIZE = 1;
 
-function createScratchCanvas(width, height) {
+function createScratchCanvas(ctx, width, height) {
+  /* jon -- this doesn't exist in node
   var canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
+  */
+  var canvas = ctx.createCanvas(width, height);
   return canvas;
 }
 
@@ -253,6 +256,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
   }
 
   function putBinaryImageData(ctx, data, w, h) {
+    /*
     var tmpImgData = 'createImageData' in ctx ? ctx.createImageData(w, h) :
       ctx.getImageData(0, 0, w, h);
 
@@ -266,9 +270,10 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     }
 
     ctx.putImageData(tmpImgData, 0, 0);
+    */
   }
 
-  function prescaleImage(pixels, width, height, widthScale, heightScale) {
+  function prescaleImage(ctx, pixels, width, height, widthScale, heightScale) {
     pixels = new Uint8Array(pixels); // creating a copy
     while (widthScale > 2 || heightScale > 2) {
       if (heightScale > 2) {
@@ -350,7 +355,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       }
     }
 
-    var tmpCanvas = createScratchCanvas(width, height);
+    var tmpCanvas = createScratchCanvas(ctx, width, height);
     var tmpCtx = tmpCanvas.getContext('2d');
     putBinaryImageData(tmpCtx, pixels.subarray(0, width * height * 4),
                                width, height);
@@ -775,7 +780,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var canvasWidth = ctx.canvas.width;
       var canvasHeight = ctx.canvas.height;
       // keeping track of the text clipping of the separate canvas
-      var maskCanvas = createScratchCanvas(canvasWidth, canvasHeight);
+      var maskCanvas = createScratchCanvas(ctx, canvasWidth, canvasHeight);
       var maskCtx = maskCanvas.getContext('2d');
       maskCtx.setTransform.apply(maskCtx, transform);
       maskCtx.font = ctx.font;
@@ -1530,7 +1535,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     paintImageMaskXObject: function CanvasGraphics_paintImageMaskXObject(
                              imgArray, inverseDecode, width, height) {
       var ctx = this.ctx;
-      var tmpCanvas = createScratchCanvas(width, height);
+      var tmpCanvas = createScratchCanvas(ctx, width, height);
       var tmpCtx = tmpCanvas.getContext('2d');
 
       var fillColor = this.current.fillColor;
@@ -1557,7 +1562,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         if (w > tmpCanvasWidth || h > tmpCanvasHeight) {
           tmpCanvasWidth = Math.max(w, tmpCanvasWidth);
           tmpCanvasHeight = Math.max(h, tmpCanvasHeight);
-          tmpCanvas = createScratchCanvas(tmpCanvasWidth, tmpCanvasHeight);
+          tmpCanvas = createScratchCanvas(ctx, tmpCanvasWidth, tmpCanvasHeight);
           tmpCtx = tmpCanvas.getContext('2d');
 
           var fillColor = this.current.fillColor;
@@ -1603,17 +1608,19 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var currentTransform = ctx.mozCurrentTransformInverse;
       var widthScale = Math.max(Math.abs(currentTransform[0]), 1);
       var heightScale = Math.max(Math.abs(currentTransform[3]), 1);
-      var tmpCanvas = createScratchCanvas(width, height);
+      var tmpCanvas = createScratchCanvas(ctx, width, height);
       var tmpCtx = tmpCanvas.getContext('2d');
-
+      //TODO: See if we can get PDF.js to have a flag to turn off this
+      /*
       if (widthScale > 2 || heightScale > 2) {
         // canvas does not resize well large images to small -- using simple
         // algorithm to perform pre-scaling
-        tmpCanvas = prescaleImage(imgData.data,
-                                 width, height,
-                                 widthScale, heightScale);
+        // jon -- remove images, replace with black rectangle
+        tmpCanvas = prescaleImage(ctx, imgData.data,
+                                  width, height,
+                                  widthScale, heightScale);
         ctx.drawImage(tmpCanvas, 0, 0, tmpCanvas.width, tmpCanvas.height,
-                                 0, -height, width, height);
+                      0, -height, width, height);
       } else {
         if (typeof ImageData !== 'undefined' && imgData instanceof ImageData) {
           tmpCtx.putImageData(imgData, 0, 0);
@@ -1633,6 +1640,12 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
           height: height / currentTransform[3]
         });
       }
+      */
+      // No need to deal with putBinaryImageData since we're always loading an image.
+      // No need to resize for now. Just write draw instructions to the canvas inst.
+      // and return.
+      ctx.drawImage(imgData, 0, -height);
+
       this.restore();
     },
 
@@ -1642,7 +1655,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var w = imgData.width;
       var h = imgData.height;
 
-      var tmpCanvas = createScratchCanvas(w, h);
+      var tmpCanvas = createScratchCanvas(ctx, w, h);
       var tmpCtx = tmpCanvas.getContext('2d');
       putBinaryImageData(tmpCtx, imgData.data, w, h);
 

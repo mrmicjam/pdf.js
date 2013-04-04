@@ -310,7 +310,7 @@ var TilingPattern = (function TilingPatternClosure() {
     height = Math.min(Math.ceil(Math.abs(height * combinedScale[1])),
                       MAX_PATTERN_SIZE);
 
-    var tmpCanvas = createScratchCanvas(width, height);
+    var tmpCanvas = createScratchCanvas(ctx, width, height);
 
     // set the new canvas element context as the graphics context
     var tmpCtx = tmpCanvas.getContext('2d');

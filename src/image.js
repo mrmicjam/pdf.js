@@ -467,10 +467,14 @@ var PDFImage = (function PDFImageClosure() {
 })();
 
 function loadJpegStream(id, imageData, objs) {
+  // use the jpeg stream as-is
+  objs.resolve(id, imageData);
+  /*
   var img = new Image();
   img.onload = (function loadJpegStream_onloadClosure() {
     objs.resolve(id, img);
   });
   img.src = 'data:image/jpeg;base64,' + window.btoa(imageData);
+  */
 }
 

@@ -254,7 +254,9 @@ var Type2Parser = function type2Parser(aFilePath) {
   var xhr = new XMLHttpRequest();
   xhr.open('GET', aFilePath, false);
   xhr.mozResponseType = xhr.responseType = 'arraybuffer';
-  xhr.expected = (document.URL.indexOf('file:') === 0) ? 0 : 200;
+  // jon -- document/window removal
+  //xhr.expected = (document.URL.indexOf('file:') == 0) ? 0 : 200;
+  xhr.expected = 200;
   xhr.send(null);
   this.data = new Stream(xhr.mozResponseArrayBuffer || xhr.mozResponse ||
                          xhr.responseArrayBuffer || xhr.response);
@@ -404,9 +406,11 @@ var Type2Parser = function type2Parser(aFilePath) {
  * writeToFile(fontData, "/tmp/pdf.js." + fontCount + ".cff");
  */
 function writeToFile(aBytes, aFilePath) {
+  // jon -- document/window removal 
+  /*
   if (!('netscape' in window))
     return;
-
+  */
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   var Cc = Components.classes,
       Ci = Components.interfaces;
