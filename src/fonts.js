@@ -4171,8 +4171,15 @@ var Font = (function FontClosure() {
         return null;
       }
       
-      var fontDef = PDFJS.saveFont(PDFJS.font_url, this.name, this.loadedName, data);
+      var fontDef = PDFJS.saveFont(PDFJS.font_url, this.name, data);
       fontDef.testChar = this.testChar;
+
+      // HC-576
+      // PDF.js names fonts uniquely using the form g_font_pX_x, where X is the page number
+      // This causes lib_viewer to load a lot of additonal fonts. Instead of using PDF.js'
+      // naming convention, just reference the font by its name on disk.
+      this.loadedName = fontDef.fontFamily;
+
       PDFJS.addFontDef(fontDef);
 
       return null;

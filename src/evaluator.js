@@ -282,26 +282,51 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
         insertDependency([objId]);
         args = [objId, w, h];
 
-        if (!softMask && !mask && image instanceof JpegStream &&
-            image.isNativelySupported(xref, resources)) {
-          // These JPEGs don't need any more processing so we can just send it.
-          fn = 'paintJpegXObject';
-          var imageData = {
-            width: w,
-            height: h,
-          };
-          imageData.path = PDFJS.saveImage(image.bytes, w, h, 'jpg');
-          handler.send('obj', [objId, pageIndex, 'JpegStream', imageData]);
-          return;
+        if (image instanceof JpegStream) {
+            fn = 'paintJpegXObject';
+
+            var imageData = {
+                width: w,
+                height: h
+            };
+
+            if (!image.isNativelySupported(xref, resources)) {
+
+                PDFJS.convertImage(function (image) {
+                        imageData.path = PDFJS.saveImage(image.bytes, w, h, 'jpg');
+                        handler.send('obj',
+                                     [objId, pageIndex, 'JpegStream', imageData]);
+                    },
+                    image,
+                    'jpg');
+            } else {
+                // No conversion needed for natively supported jpeg rgb.
+                imageData.path = PDFJS.saveImage(image.bytes, w, h, 'jpg');
+                handler.send('obj',
+                             [objId, pageIndex, 'JpegStream', imageData]);
+            }
+
+            if (!softMask && !mask) {
+                // no softMask or mask, so we use the jpeg as-is
+                return;
+            }
+        } else {
+            fn = 'paintImageXObject';
+
+            PDFImage.buildImage(function(imageObj) {
+                var imgData = imageObj.getImageData();
+                if (imgData !== undefined) {
+                    if (imgData.width) {
+                        w = imgData.width;
+                    }
+                    if (imgData.width) {
+                        h = imgData.height;
+                    }
+                }
+                imgData.path = PDFJS.saveImage(imgData.data, w, h, 'png');
+                handler.send('obj', [objId, pageIndex, 'Image', imgData]);
+              }, handler, xref, resources, image, inline);
         }
-
-        fn = 'paintImageXObject';
-
-        PDFImage.buildImage(function(imageObj) {
-            var imgData = imageObj.getImageData();
-            imgData.path = PDFJS.saveImage(imgData.data, w, h, 'png');
-            handler.send('obj', [objId, pageIndex, 'Image', imgData]);
-          }, handler, xref, resources, image, inline);
       }
 
       if (!queue)
