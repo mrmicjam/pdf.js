@@ -1430,7 +1430,8 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       // too small.
       var drawnWidth = Math.ceil(bounds[2] - bounds[0]);
       var drawnHeight = Math.ceil(bounds[3] - bounds[1]);
-      var scratchCanvas = createScratchCanvas(drawnWidth, drawnHeight);
+      // RAJ: Pass 'currentCtx' to createScratchCanvas.
+      var scratchCanvas = createScratchCanvas(currentCtx, drawnWidth, drawnHeight);
       var groupCtx = scratchCanvas.getContext('2d');
       addContextCurrentTransform(groupCtx);
       // Since we created a new canvas that is just the size of the bounding box
