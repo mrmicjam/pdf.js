@@ -14,6 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/* globals PDFJS, getPdf, combineUrl, StatTimer, SpecialPowers */
 
 'use strict';
 
@@ -49,7 +50,6 @@ function load() {
   var delay = params.delay || 0;
 
   canvas = document.createElement('canvas');
-  canvas.mozOpaque = true;
   stdout = document.getElementById('stdout');
 
   info('User Agent: ' + navigator.userAgent);
@@ -147,12 +147,16 @@ function nextTask() {
   });
 }
 
-function isLastPage(task) {
-  var limit = task.pageLimit || 0;
-  if (!limit || limit > task.pdfDoc.numPages)
-   limit = task.pdfDoc.numPages;
+function getLastPageNum(task) {
+  var lastPageNum = task.lastPage || 0;
+  if (!lastPageNum || lastPageNum > task.pdfDoc.numPages) {
+    lastPageNum = task.pdfDoc.numPages;
+  }
+  return lastPageNum;
+}
 
-  return task.pageNum > limit;
+function isLastPage(task) {
+  return task.pageNum > getLastPageNum(task);
 }
 
 function canvasToDataURL() {
@@ -347,7 +351,8 @@ function sendTaskResult(snapshot, task, failure, result) {
       browser: browser,
       id: task.id,
       numPages: task.pdfDoc ?
-               (task.pageLimit || task.pdfDoc.numPages) : 0,
+               (task.lastPage || task.pdfDoc.numPages) : 0,
+      lastPageNum: getLastPageNum(task),
       failure: failure,
       file: task.file,
       round: task.round,
@@ -388,10 +393,7 @@ function info(message) {
 }
 
 function clear(ctx) {
-  ctx.save();
-  ctx.fillStyle = 'rgb(255, 255, 255)';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.restore();
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
 /* Auto-scroll if the scrollbar is near the bottom, otherwise do nothing. */

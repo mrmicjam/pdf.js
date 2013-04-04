@@ -15,25 +15,29 @@
 import json, platform, os, shutil, sys, subprocess, tempfile, threading
 import time, urllib, urllib2, hashlib, re, base64, uuid, socket, errno
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
-import SocketServer
+from SocketServer import ThreadingMixIn
 from optparse import OptionParser
 from urlparse import urlparse, parse_qs
+from threading import Lock
 
 USAGE_EXAMPLE = "%prog"
 
 # The local web server uses the git repo as the document root.
 DOC_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__),".."))
 
-GIT_CLONE_CHECK = False
+GIT_CLONE_CHECK = True
 DEFAULT_MANIFEST_FILE = 'test_manifest.json'
 EQLOG_FILE = 'eq.log'
 BROWSERLOG_FILE = 'browser.log'
 REFDIR = 'ref'
+TEST_SNAPSHOTS = 'test_snapshots'
 TMPDIR = 'tmp'
 VERBOSE = False
 BROWSER_TIMEOUT = 60
 
 SERVER_HOST = "localhost"
+
+lock = Lock()
 
 class TestOptions(OptionParser):
     def __init__(self, **kwargs):
@@ -134,8 +138,8 @@ class Result:
         self.failure = failure
         self.page = page
 
-class TestServer(SocketServer.TCPServer):
-    allow_reuse_address = True
+class TestServer(ThreadingMixIn, HTTPServer):
+    pass
 
 class TestHandlerBase(BaseHTTPRequestHandler):
     # Disable annoying noise by default
@@ -243,40 +247,41 @@ class UnitTestHandler(TestHandlerBase):
         return
 
     def do_POST(self):
-        url = urlparse(self.path)
-        numBytes = int(self.headers['Content-Length'])
-        content = self.rfile.read(numBytes)
+        with lock:
+            url = urlparse(self.path)
+            numBytes = int(self.headers['Content-Length'])
+            content = self.rfile.read(numBytes)
 
-        # Process special utility requests
-        if url.path == '/ttx':
-            self.translateFont(content)
-            return
+            # Process special utility requests
+            if url.path == '/ttx':
+                self.translateFont(content)
+                return
 
-        self.send_response(200)
-        self.send_header('Content-Type', 'text/plain')
-        self.end_headers()
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/plain')
+            self.end_headers()
 
-        result = json.loads(content)
-        browser = result['browser']
-        UnitTestState.lastPost[browser] = int(time.time())
-        if url.path == "/tellMeToQuit":
-            tellAppToQuit(url.path, url.query)
-            UnitTestState.browsersRunning -= 1
-            UnitTestState.lastPost[browser] = None
-            return
-        elif url.path == '/info':
-            print result['message']
-        elif url.path == '/submit_task_results':
-            status, description = result['status'], result['description']
-            UnitTestState.numRun += 1
-            if status == 'TEST-UNEXPECTED-FAIL':
-                UnitTestState.numErrors += 1
-            message = status + ' | ' + description + ' | in ' + browser
-            if 'error' in result:
-                message += ' | ' + result['error']
-            print message
-        else:
-            print 'Error: uknown action' + url.path
+            result = json.loads(content)
+            browser = result['browser']
+            UnitTestState.lastPost[browser] = int(time.time())
+            if url.path == "/tellMeToQuit":
+                tellAppToQuit(url.path, url.query)
+                UnitTestState.browsersRunning -= 1
+                UnitTestState.lastPost[browser] = None
+                return
+            elif url.path == '/info':
+                print result['message']
+            elif url.path == '/submit_task_results':
+                status, description = result['status'], result['description']
+                UnitTestState.numRun += 1
+                if status == 'TEST-UNEXPECTED-FAIL':
+                    UnitTestState.numErrors += 1
+                message = status + ' | ' + description + ' | in ' + browser
+                if 'error' in result:
+                    message += ' | ' + result['error']
+                print message
+            else:
+                print 'Error: uknown action' + url.path
 
 class PDFTestHandler(TestHandlerBase):
 
@@ -310,56 +315,65 @@ class PDFTestHandler(TestHandlerBase):
 
 
     def do_POST(self):
-        numBytes = int(self.headers['Content-Length'])
+        with lock:
+            numBytes = int(self.headers['Content-Length'])
 
-        self.send_response(200)
-        self.send_header('Content-Type', 'text/plain')
-        self.end_headers()
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/plain')
+            self.end_headers()
 
-        url = urlparse(self.path)
-        if url.path == "/tellMeToQuit":
-            tellAppToQuit(url.path, url.query)
-            return
+            url = urlparse(self.path)
+            if url.path == "/tellMeToQuit":
+                tellAppToQuit(url.path, url.query)
+                return
 
-        result = json.loads(self.rfile.read(numBytes))
-        browser = result['browser']
-        State.lastPost[browser] = int(time.time())
-        if url.path == "/info":
-            print result['message']
-            return
+            result = json.loads(self.rfile.read(numBytes))
+            browser = result['browser']
+            State.lastPost[browser] = int(time.time())
+            if url.path == "/info":
+                print result['message']
+                return
 
-        id, failure, round, page, snapshot = result['id'], result['failure'], result['round'], result['page'], result['snapshot']
-        taskResults = State.taskResults[browser][id]
-        taskResults[round].append(Result(snapshot, failure, page))
-        if State.saveStats:
-            stat = {
-                'browser': browser,
-                'pdf': id,
-                'page': page,
-                'round': round,
-                'stats': result['stats']
-            }
-            State.stats.append(stat)
+            id = result['id']
+            failure = result['failure']
+            round = result['round']
+            page = result['page']
+            snapshot = result['snapshot']
 
-        def isTaskDone():
-            numPages = result["numPages"]
-            rounds = State.manifest[id]["rounds"]
-            for round in range(0,rounds):
-                if len(taskResults[round]) < numPages:
-                    return False
-            return True
+            taskResults = State.taskResults[browser][id]
+            taskResults[round].append(Result(snapshot, failure, page))
+            if State.saveStats:
+                stat = {
+                    'browser': browser,
+                    'pdf': id,
+                    'page': page,
+                    'round': round,
+                    'stats': result['stats']
+                }
+                State.stats.append(stat)
 
-        if isTaskDone():
-            # sort the results since they sometimes come in out of order
-            for results in taskResults:
-                results.sort(key=lambda result: result.page)
-            check(State.manifest[id], taskResults, browser,
-                  self.server.masterMode)
-            # Please oh please GC this ...
-            del State.taskResults[browser][id]
-            State.remaining[browser] -= 1
+            def isTaskDone():
+                last_page_num = result['lastPageNum']
+                rounds = State.manifest[id]['rounds']
+                for round in range(0,rounds):
+                    if not taskResults[round]:
+                        return False
+                    latest_page = taskResults[round][-1]
+                    if not latest_page.page == last_page_num:
+                        return False
+                return True
 
-            checkIfDone()
+            if isTaskDone():
+                # sort the results since they sometimes come in out of order
+                for results in taskResults:
+                    results.sort(key=lambda result: result.page)
+                check(State.manifest[id], taskResults, browser,
+                    self.server.masterMode)
+                # Please oh please GC this ...
+                del State.taskResults[browser][id]
+                State.remaining[browser] -= 1
+
+                checkIfDone()
 
 def checkIfDone():
     State.done = True
@@ -630,58 +644,78 @@ def check(task, results, browser, masterMode):
     else:
         assert 0 and 'Unknown test type'
 
+def createDir(dir):
+    try:
+        os.makedirs(dir)
+    except OSError, e:
+        if e.errno != 17: # file exists
+            print >>sys.stderr, 'Creating', dir, 'failed!'
+
+
+def readDataUri(data):
+    metadata, encoded = data.rsplit(",", 1)
+    return base64.b64decode(encoded)
 
 def checkEq(task, results, browser, masterMode):
     pfx = os.path.join(REFDIR, sys.platform, browser, task['id'])
+    testSnapshotDir = os.path.join(TEST_SNAPSHOTS, sys.platform, browser, task['id'])
     results = results[0]
     taskId = task['id']
     taskType = task['type']
 
     passed = True
-    for page in xrange(len(results)):
-        snapshot = results[page].snapshot
+    for result in results:
+        page = result.page
+        snapshot = readDataUri(result.snapshot)
         ref = None
         eq = True
 
-        path = os.path.join(pfx, str(page + 1))
+        path = os.path.join(pfx, str(page) + '.png')
         if not os.access(path, os.R_OK):
             State.numEqNoSnapshot += 1
             if not masterMode:
                 print 'WARNING: no reference snapshot', path
         else:
-            f = open(path)
+            f = open(path, 'rb')
             ref = f.read()
             f.close()
 
             eq = (ref == snapshot)
             if not eq:
-                print 'TEST-UNEXPECTED-FAIL |', taskType, taskId, '| in', browser, '| rendering of page', page + 1, '!= reference rendering'
+                print 'TEST-UNEXPECTED-FAIL |', taskType, taskId, '| in', browser, '| rendering of page', page, '!= reference rendering'
 
                 if not State.eqLog:
                     State.eqLog = open(EQLOG_FILE, 'w')
                 eqLog = State.eqLog
 
+                createDir(testSnapshotDir)
+                testSnapshotPath = os.path.join(testSnapshotDir, str(page) + '.png')
+                handle = open(testSnapshotPath, 'wb')
+                handle.write(snapshot)
+                handle.close()
+
+                refSnapshotPath = os.path.join(testSnapshotDir, str(page) + '_ref.png')
+                handle = open(refSnapshotPath, 'wb')
+                handle.write(ref)
+                handle.close()
+
                 # NB: this follows the format of Mozilla reftest
                 # output so that we can reuse its reftest-analyzer
                 # script
-                eqLog.write('REFTEST TEST-UNEXPECTED-FAIL | ' + browser +'-'+ taskId +'-page'+ str(page + 1) + ' | image comparison (==)\n')
-                eqLog.write('REFTEST   IMAGE 1 (TEST): ' + snapshot + '\n')
-                eqLog.write('REFTEST   IMAGE 2 (REFERENCE): ' + ref + '\n')
+                eqLog.write('REFTEST TEST-UNEXPECTED-FAIL | ' + browser +'-'+ taskId +'-page'+ str(page) + ' | image comparison (==)\n')
+                eqLog.write('REFTEST   IMAGE 1 (TEST): ' + testSnapshotPath + '\n')
+                eqLog.write('REFTEST   IMAGE 2 (REFERENCE): ' + refSnapshotPath + '\n')
 
                 passed = False
                 State.numEqFailures += 1
 
         if masterMode and (ref is None or not eq):
             tmpTaskDir = os.path.join(TMPDIR, sys.platform, browser, task['id'])
-            try:
-                os.makedirs(tmpTaskDir)
-            except OSError, e:
-                if e.errno != 17: # file exists
-                    print >>sys.stderr, 'Creating', tmpTaskDir, 'failed!'
-        
-            of = open(os.path.join(tmpTaskDir, str(page + 1)), 'w')
-            of.write(snapshot)
-            of.close()
+            createDir(tmpTaskDir)
+
+            handle = open(os.path.join(tmpTaskDir, str(page)) + '.png', 'wb')
+            handle.write(snapshot)
+            handle.close()
 
     if passed:
         print 'TEST-PASS |', taskType, 'test', task['id'], '| in', browser
@@ -742,10 +776,9 @@ def maybeUpdateRefImages(options, browser):
             if options.noPrompts or prompt('Would you like to update the master copy in ref/?'):
                 sys.stdout.write('  Updating ref/ ... ')
 
-                # XXX unclear what to do on errors here ...
-                # NB: do *NOT* pass --delete to rsync.  That breaks this
-                # entire scheme.
-                subprocess.check_call(( 'rsync', '-arvq', 'tmp/', 'ref/' ))
+                if not os.path.exists('ref'):
+                    subprocess.check_call('mkdir ref', shell = True)
+                subprocess.check_call('cp -Rf tmp/* ref/', shell = True)
 
                 print 'done'
             else:
@@ -765,6 +798,11 @@ def startReftest(browser, options):
     print "Completed reftest usage."
 
 def runTests(options, browsers):
+    try:
+        shutil.rmtree(TEST_SNAPSHOTS);
+    except OSError, e:
+        if e.errno != 2: # folder doesn't exist
+            print >>sys.stderr, 'Deleting', dir, 'failed!'
     t1 = time.time()
     try:
         startBrowsers(browsers, options, '/test/test_slave.html')

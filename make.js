@@ -1,11 +1,29 @@
 /* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab: */
+/* Copyright 2012 Mozilla Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+/* jshint node:true */
+/* globals cat, cd, cp, echo, env, exec, exit, find, ls, mkdir, mv, process, rm,
+           sed, target, test */
 
 'use strict';
 
 require('./external/shelljs/make');
 var builder = require('./external/builder/builder.js');
 var crlfchecker = require('./external/crlfchecker/crlfchecker.js');
+var path = require('path');
 
 var ROOT_DIR = __dirname + '/', // absolute path to project's root
     BUILD_DIR = 'build/',
@@ -39,12 +57,12 @@ var DEFINES = {
 target.all = function() {
   // Don't do anything by default
   echo('Please specify a target. Available targets:');
-  for (t in target)
+  for (var t in target)
     if (t !== 'all') echo('  ' + t);
 };
 
 
-///////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 //
 // Production stuff
 //
@@ -265,13 +283,13 @@ target.bundle = function() {
 
 
 
-///////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 //
 // Extension stuff
 //
 
-var EXTENSION_BASE_VERSION = '9583cb710808f6c9746c4723de0c0a816bc006e1',
-    EXTENSION_VERSION_PREFIX = '0.7.',
+var EXTENSION_BASE_VERSION = '0ac55ac879d1c0eea9c0d155d5bbd9b11560f631',
+    EXTENSION_VERSION_PREFIX = '0.8.',
     EXTENSION_BUILD_NUMBER,
     EXTENSION_VERSION;
 
@@ -572,13 +590,14 @@ target.chrome = function() {
       [COMMON_WEB_FILES, CHROME_BUILD_CONTENT_DIR + '/web'],
       [['extensions/chrome/*.json',
         'extensions/chrome/*.html',
-        'extensions/chrome/*.js'],
+        'extensions/chrome/*.js',
+        'extensions/chrome/icon*.png',],
        CHROME_BUILD_DIR],
-      [BUILD_TARGET, CHROME_BUILD_CONTENT_DIR + BUILD_TARGET],
       ['external/webL10n/l10n.js', CHROME_BUILD_CONTENT_DIR + '/web'],
       ['web/locale', CHROME_BUILD_CONTENT_DIR + '/web']
     ],
     preprocess: [
+      [BUILD_TARGET, CHROME_BUILD_CONTENT_DIR + BUILD_TARGET],
       [COMMON_WEB_FILES_PREPROCESS, CHROME_BUILD_CONTENT_DIR + '/web']
     ]
   };
@@ -611,8 +630,9 @@ target.chrome = function() {
     exit(1);
   }
 
+  var manifest;
   try {
-    var manifest = JSON.parse(cat(browserManifest));
+    manifest = JSON.parse(cat(browserManifest));
   } catch (e) {
     echo('Malformed browser manifest file');
     echo(e.message);
@@ -654,7 +674,7 @@ target.chrome = function() {
 };
 
 
-///////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 //
 // Test stuff
 //
@@ -930,7 +950,7 @@ target.mozcentralcheck = function() {
 };
 
 
-///////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 //
 // Other
 //
@@ -953,20 +973,28 @@ target.server = function() {
 target.lint = function() {
   cd(ROOT_DIR);
   echo();
-  echo('### Linting JS files (this can take a while!)');
+  echo('### Linting JS files');
 
   var LINT_FILES = ['make.js',
-                    'external/builder/*.js',
-                    'external/crlfchecker/*.js',
-                    'src/*.js',
-                    'web/*.js',
-                    'test/*.js',
-                    'test/unit/*.js',
-                    'extensions/firefox/*.js',
-                    'extensions/firefox/components/*.js',
-                    'extensions/chrome/*.js'];
+                    'external/builder/',
+                    'external/crlfchecker/',
+                    'src/',
+                    'web/',
+                    'test/driver.js',
+                    'test/reporter.js',
+                    'test/unit/',
+                    'extensions/firefox/',
+                    'extensions/chrome/'
+                    ];
 
-  exec('gjslint --nojsdoc ' + LINT_FILES.join(' '));
+  var jshintPath = path.normalize('./node_modules/.bin/jshint');
+  if (!test('-f', jshintPath)) {
+    echo('jshint is not installed -- installing...');
+    exec('npm install jshint');
+  }
+
+  exit(exec('"' + jshintPath + '" --reporter test/reporter.js ' +
+            LINT_FILES.join(' ')).code);
 
   crlfchecker.checkIfCrlfIsPresent(LINT_FILES);
 };

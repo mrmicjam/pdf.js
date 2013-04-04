@@ -470,6 +470,18 @@ var tests = [
     area: 'Core'
   },
   {
+    id: 'TextDecoder',
+    name: 'TextDecoder is present',
+    run: function () {
+      if (typeof TextDecoder != 'undefined')
+        return { output: 'Success', emulated: '' };
+      else
+        return { output: 'Failed', emulated: 'No' };
+    },
+    impact: 'Critical',
+    area: 'Core'
+  },
+  {
     id: 'Worker',
     name: 'Worker is present',
     run: function () {
@@ -502,7 +514,7 @@ var tests = [
             promise.resolve({ output: 'Success', emulated: '' });
           else
             promise.resolve({ output: 'Failed', emulated: 'Yes' });
-        });
+        }, false);
         worker.postMessage({action: 'test',
                             data: new Uint8Array(60000000)}); // 60MB
         return promise;
@@ -534,12 +546,80 @@ var tests = [
             promise.resolve({ output: 'Success', emulated: '' });
           else
             promise.resolve({ output: 'Failed', emulated: 'Yes' });
-        });
+        }, false);
         worker.postMessage({action: 'xhr'});
         return promise;
       } catch (e) {
         return { output: 'Failed', emulated: 'Yes' };
       }
+    },
+    impact: 'Important',
+    area: 'Core'
+  },
+  {
+    id: 'Worker-TextDecoder',
+    name: 'TextDecoder is present in web workers',
+    run: function () {
+      if (typeof Worker == 'undefined')
+        return { output: 'Skipped', emulated: '' };
+
+      var emulatable = typeof TextDecoder !== 'undefined';
+      try {
+        var worker = new Worker('worker-stub.js');
+
+        var promise = new Promise();
+        var timeout = setTimeout(function () {
+          promise.resolve({ output: 'Failed',
+                            emulated: emulatable ? '?' : 'No' });
+        }, 5000);
+
+        worker.addEventListener('message', function (e) {
+          var data = e.data;
+          if (data.action === 'TextDecoder') {
+            if (data.result) {
+              promise.resolve({ output: 'Success', emulated: '' });
+            } else {
+              promise.resolve({ output: 'Failed',
+                                emulated: data.emulated ? 'Yes' : 'No' });
+            }
+          } else {
+            promise.resolve({ output: 'Failed',
+                              emulated: emulatable ? 'Yes' : 'No' });
+          }
+        }, false);
+        worker.postMessage({action: 'TextDecoder'});
+        return promise;
+      } catch (e) {
+        return { output: 'Failed', emulated: emulatable ? 'Yes' : 'No' };
+      }
+    },
+    impact: 'Important',
+    area: 'Core'
+  },
+  {
+    id: 'Canvas Blend Mode',
+    name: 'Canvas supports extended blend modes',
+    run: function () {
+      var fail = { output: 'Failed', emulated: 'No' };
+      var ctx = document.createElement('canvas').getContext('2d');
+      ctx.canvas.width = 1;
+      ctx.canvas.height = 1;
+      var mode = 'difference';
+      ctx.globalCompositeOperation = mode;
+      if (ctx.globalCompositeOperation !== mode) {
+        return fail;
+      }
+      // Chrome supports setting the value, but it may not actually be
+      // implemented, so we have to actually test the blend mode.
+      ctx.fillStyle = 'red';
+      ctx.fillRect(0, 0, 1, 1);
+      ctx.fillStyle = 'blue';
+      ctx.fillRect(0, 0, 1, 1);
+      var pix = ctx.getImageData(0, 0, 1, 1).data;
+      if (pix[0] !== 255 || pix[1] !== 0 || pix[2] !== 255) {
+        return fail;
+      }
+      return { output: 'Success', emulated: '' };
     },
     impact: 'Important',
     area: 'Core'
