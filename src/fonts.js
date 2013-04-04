@@ -7192,7 +7192,9 @@ var CFFCompiler = (function CFFCompilerClosure() {
 
 // Workaround for seac on Windows.
 (function checkSeacSupport() {
-  if (/Windows/.test(navigator.userAgent)) {
+  // RAJ: Remove DOM/window references
+  // if (/Windows/.test(navigator.userAgent)) {
+  if (0) {
     SEAC_ANALYSIS_ENABLED = true;
   }
 })();
