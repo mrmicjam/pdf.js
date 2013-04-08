@@ -4179,7 +4179,11 @@ var Font = (function FontClosure() {
       // naming convention, just reference the font by its name on disk.
       this.loadedName = fontDef.fontFamily;
 
-      PDFJS.addFontDef(fontDef);
+      if (this.invalid) {
+          PDFJS.hideFont(this.loadedName);
+      } else {
+          PDFJS.addFontDef(fontDef);
+      }
 
       return null;
       /*
