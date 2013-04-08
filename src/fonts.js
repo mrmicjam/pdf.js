@@ -4170,9 +4170,8 @@ var Font = (function FontClosure() {
         console.log("the font data was none after doing bytes to String");
         return null;
       }
-      
-      var fontDef = PDFJS.saveFont(PDFJS.font_url, this.name, data);
-      fontDef.testChar = this.testChar;
+
+      var fontDef = PDFJS.saveFont(this, PDFJS.font_url, this.name, data);
 
       // HC-576
       // PDF.js names fonts uniquely using the form g_font_pX_x, where X is the page number
