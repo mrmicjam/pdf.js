@@ -686,6 +686,12 @@ var WorkerTransport = (function WorkerTransportClosure() {
             height: h,*/
             bytes: buf
         };
+        // TODO: Replace this conversion. This is slow because it sends full rgba
+        // data back through stdout to this process in segments and then concats
+        // them together.
+        // Possible alternatives:
+        //  Replace stdout capture with a Stream (it may be faster).
+        //  Do the masking directly with IM operating on written files.
         PDFJS.convertImage(function (image) {
                 promise.resolve({ data: image.bytes, width: image.width, height: image.height});
             },
