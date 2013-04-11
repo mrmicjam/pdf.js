@@ -652,6 +652,7 @@ var WorkerTransport = (function WorkerTransportClosure() {
         if (components != 3 && components != 1)
           error('Only 3 component or 1 component can be returned');
 
+        /*
         var img = new Image();
         img.onload = (function messageHandler_onloadClosure() {
           var width = img.width;
@@ -678,6 +679,24 @@ var WorkerTransport = (function WorkerTransportClosure() {
           promise.resolve({ data: buf, width: width, height: height});
         }).bind(this);
         // http://stackoverflow.com/questions/6182315/how-to-do-base64-encoding-in-node-js
+        */
+        var buf = new Buffer(imageData, 'binary');
+        var image = {
+            /*width: w,     // convertImage must find the image dimensions
+            height: h,*/
+            bytes: buf,
+            name: 'test' + numb
+        };
+        PDFJS.convertImage(function (image) {
+                console.log('mask image created. now resolve promise with rgba data image.bytes===undefined:', image.bytes === undefined);
+                promise.resolve({ data: image.bytes, width: image.width, height: image.height});
+                //console.log('write test file');
+                //fs.writeFile("testoutfile" + numb + "_out.jpg", btoa(image.data), 'base64');
+            },
+            image,
+            'jpg',
+            'rgba');
+        /*
         var src;
         if (typeof window !== 'undefined') {
           // in a window use the window encode
@@ -690,6 +709,7 @@ var WorkerTransport = (function WorkerTransportClosure() {
         else
           console.log("err0r3d!");
         img.src = src;
+        */
       });
     },
 
