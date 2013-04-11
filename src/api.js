@@ -684,14 +684,10 @@ var WorkerTransport = (function WorkerTransportClosure() {
         var image = {
             /*width: w,     // convertImage must find the image dimensions
             height: h,*/
-            bytes: buf,
-            name: 'test' + numb
+            bytes: buf
         };
         PDFJS.convertImage(function (image) {
-                console.log('mask image created. now resolve promise with rgba data image.bytes===undefined:', image.bytes === undefined);
                 promise.resolve({ data: image.bytes, width: image.width, height: image.height});
-                //console.log('write test file');
-                //fs.writeFile("testoutfile" + numb + "_out.jpg", btoa(image.data), 'base64');
             },
             image,
             'jpg',
