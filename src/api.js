@@ -652,6 +652,7 @@ var WorkerTransport = (function WorkerTransportClosure() {
         if (components != 3 && components != 1)
           error('Only 3 component or 1 component can be returned');
 
+        // WF measure and convert through ImageMagick
         /*
         var img = new Image();
         img.onload = (function messageHandler_onloadClosure() {
@@ -712,6 +713,7 @@ var WorkerTransport = (function WorkerTransportClosure() {
           console.log("err0r3d!");
         img.src = src;
         */
+        // END WF
       });
     },
 
