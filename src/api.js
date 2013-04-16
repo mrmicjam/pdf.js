@@ -681,24 +681,35 @@ var WorkerTransport = (function WorkerTransportClosure() {
         }).bind(this);
         // http://stackoverflow.com/questions/6182315/how-to-do-base64-encoding-in-node-js
         */
+
         var buf = new Buffer(imageData, 'binary');
         var image = {
-            /*width: w,     // convertImage must find the image dimensions
-            height: h,*/
+            // The promise requires image.width and image.height to be the
+            // correct dimensions for the image.
+            // wfImage.convertImage() will use wfImage.measureImage() to find
+            // the image dimensions.
+            /*
+            width: w,
+            height: h,
+            */
             bytes: buf
         };
+
         // TODO: Replace this conversion. This is slow because it sends full rgba
         // data back through stdout to this process in segments and then concats
         // them together.
         // Possible alternatives:
         //  Replace stdout capture with a Stream (it may be faster).
         //  Do the masking directly with IM operating on written files.
+        //  Use a canvas package for node like node-image and keep the pdfjs code.
         PDFJS.convertImage(function (image) {
-                promise.resolve({ data: image.bytes, width: image.width, height: image.height});
+                promise.resolve({data: image.bytes,
+                    width: image.width, height: image.height});
             },
             image,
             'jpg',
             'rgba');
+
         /*
         var src;
         if (typeof window !== 'undefined') {
