@@ -1063,8 +1063,43 @@ var PDFView = {
     }
     var url = this.url.split('#')[0];
 //#if !(FIREFOX || MOZCENTRAL)
+
+    var a = document.createElement('a');
+
+    // If _parent == self, then opening an identical URL with different
+    // location hash will only cause a navigation, not a download.
+    if (window.top === window && !('download' in a) &&
+        url === window.location.href.split('#')[0]) {
+      url += url.indexOf('?') === -1 ? '?' : '&';
+    }
+
     url += '#pdfjs.action=download';
-    window.open(url, '_parent');
+    if (a.click) {
+      // Use a.click() if available. Otherwise, Chrome might show
+      // "Unsafe JavaScript attempt to initiate a navigation change
+      //  for frame with URL" and not open the PDF at all.
+      // Supported by (not mentioned = untested):
+      // - Firefox 6 - 19 (4- does not support a.click, 5 ignores a.click)
+      // - Chrome 19 - 26 (18- does not support a.click)
+      // - Opera 9 - 12.15
+      // - Internet Explorer 6 - 10
+      // - Safari 6 (5.1- does not support a.click)
+      a.href = url;
+      a.target = '_parent';
+      // Use a.download if available. This increases the likelihood that
+      // the file is downloaded instead of opened by another PDF plugin.
+      if ('download' in a) {
+        var filename = url.match(/([^\/?#=]+\.pdf)/i);
+        a.download = filename ? filename[1] : 'file.pdf';
+      }
+      // <a> must be in the document for IE and recent Firefox versions.
+      // (otherwise .click() is ignored)
+      (document.body || document.documentElement).appendChild(a);
+      a.click();
+      a.parentNode.removeChild(a);
+    } else {
+      window.open(url, '_parent');
+    }
 //#else
 //  // Document isn't ready just try to download with the url.
 //  if (!this.pdfDocument) {
@@ -1409,6 +1444,7 @@ var PDFView = {
     PDFJS.Promise.all(promises).then(function() {
       pdfDocument.getOutline().then(function(outline) {
         self.outline = new DocumentOutlineView(outline);
+        document.getElementById('viewOutline').disabled = !outline;
       });
 
       // Make all navigation keys work on document load,
@@ -2276,7 +2312,8 @@ var PageView = function pageView(container, id, scale,
 //        'Web fonts are disabled: unable to use embedded PDF fonts.'));
 //      PDFView.fallback();
 //    }
-//    if (self.textLayer && self.textLayer.textDivs.length &&
+//    if (self.textLayer && self.textLayer.textDivs &&
+//        self.textLayer.textDivs.length > 0 &&
 //        !PDFView.supportsDocumentColors) {
 //      console.error(mozL10n.get('web_colors_disabled', null,
 //        'Web colors are disabled.'));
@@ -2586,8 +2623,16 @@ var ThumbnailView = function thumbnailView(container, id, defaultViewport) {
 
 var DocumentOutlineView = function documentOutlineView(outline) {
   var outlineView = document.getElementById('outlineView');
+  var outlineButton = document.getElementById('viewOutline');
   while (outlineView.firstChild)
     outlineView.removeChild(outlineView.firstChild);
+
+  if (!outline) {
+    if (!outlineView.classList.contains('hidden'))
+      PDFView.switchSidebarView('thumbs');
+
+    return;
+  }
 
   function bindItemLink(domObj, item) {
     domObj.href = PDFView.getDestinationHash(item.dest);
@@ -2597,14 +2642,6 @@ var DocumentOutlineView = function documentOutlineView(outline) {
     };
   }
 
-  if (!outline) {
-    var noOutline = document.createElement('div');
-    noOutline.classList.add('noOutline');
-    noOutline.textContent = mozL10n.get('no_outline', null,
-      'No Outline Available');
-    outlineView.appendChild(noOutline);
-    return;
-  }
 
   var queue = [{parent: outlineView, items: outline}];
   while (queue.length > 0) {
@@ -2693,7 +2730,6 @@ var TextLayerBuilder = function textLayerBuilder(textLayerDiv, pageIdx) {
 
   this.beginLayout = function textLayerBuilderBeginLayout() {
     this.textDivs = [];
-    this.textLayerQueue = [];
     this.renderingDone = false;
   };
 
@@ -3494,9 +3530,9 @@ window.addEventListener('keydown', function keydown(evt) {
 
   // Some shortcuts should not get handled if a control/input element
   // is selected.
-  var curElement = document.activeElement;
-  if (curElement && (curElement.tagName == 'INPUT' ||
-                     curElement.tagName == 'SELECT')) {
+  var curElement = document.activeElement || document.querySelector(':focus');
+  if (curElement && (curElement.tagName.toUpperCase() === 'INPUT' ||
+                     curElement.tagName.toUpperCase() === 'SELECT')) {
     return;
   }
   var controlsElement = document.getElementById('toolbar');
