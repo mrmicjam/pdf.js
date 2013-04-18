@@ -14,6 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/* globals error, globalScope, InvalidPDFException, log,
+           MissingPDFException, PasswordException, PDFDocument, PDFJS, Promise,
+           Stream, UnknownErrorException, warn */
 
 'use strict';
 
@@ -131,6 +134,12 @@ var WorkerMessageHandler = {
           });
 
           return;
+        } else if (e instanceof MissingPDFException) {
+          handler.send('MissingPDF', {
+            exception: e
+          });
+
+          return;
         } else {
           handler.send('UnknownError', {
             exception: new UnknownErrorException(e.message, e.toString())
@@ -143,6 +152,7 @@ var WorkerMessageHandler = {
         numPages: pdfModel.numPages,
         fingerprint: pdfModel.getFingerprint(),
         destinations: pdfModel.catalog.destinations,
+        javaScript: pdfModel.catalog.javaScript,
         outline: pdfModel.catalog.documentOutline,
         info: pdfModel.getDocumentInfo(),
         metadata: pdfModel.catalog.metadata,
@@ -159,8 +169,14 @@ var WorkerMessageHandler = {
       }
       // check if the response property is supported by xhr
       var xhr = new XMLHttpRequest();
-      if (!('response' in xhr || 'mozResponse' in xhr ||
-          'responseArrayBuffer' in xhr || 'mozResponseArrayBuffer' in xhr)) {
+      var responseExists = 'response' in xhr;
+      // check if the property is actually implemented
+      try {
+        var dummy = xhr.responseType;
+      } catch (e) {
+        responseExists = false;
+      }
+      if (!responseExists) {
         handler.send('test', false);
         return;
       }
@@ -185,8 +201,15 @@ var WorkerMessageHandler = {
             });
           },
           error: function getPDFError(e) {
-            handler.send('DocError', 'Unexpected server response of ' +
-                         e.target.status + '.');
+            if (e.target.status == 404) {
+              handler.send('MissingPDF', {
+                exception: new MissingPDFException(
+                  'Missing PDF \"' + source.url + '\".')});
+            } else {
+              handler.send('DocError', 'Unexpected server response (' +
+                            e.target.status + ') while retrieving PDF \"' +
+                            source.url + '\".');
+            }
           },
           headers: source.httpHeaders
         },
@@ -222,11 +245,6 @@ var WorkerMessageHandler = {
     handler.on('RenderPageRequest', function wphSetupRenderPage(data) {
       var pageNum = data.pageIndex + 1;
 
-      // The following code does quite the same as
-      // Page.prototype.startRendering, but stops at one point and sends the
-      // result back to the main thread.
-      var gfx = new CanvasGraphics(null);
-
       var start = Date.now();
 
       var dependency = [];
@@ -239,19 +257,21 @@ var WorkerMessageHandler = {
         var minimumStackMessage =
             'worker.js: while trying to getPage() and getOperatorList()';
 
+        var wrappedException;
+
         // Turn the error into an obj that can be serialized
         if (typeof e === 'string') {
-          e = {
+          wrappedException = {
             message: e,
             stack: minimumStackMessage
           };
         } else if (typeof e === 'object') {
-          e = {
+          wrappedException = {
             message: e.message || e.toString(),
             stack: e.stack || minimumStackMessage
           };
         } else {
-          e = {
+          wrappedException = {
             message: 'Unknown exception type: ' + (typeof e),
             stack: minimumStackMessage
           };
@@ -259,7 +279,7 @@ var WorkerMessageHandler = {
 
         handler.send('PageError', {
           pageNum: pageNum,
-          error: e
+          error: wrappedException
         });
         return;
       }
@@ -271,7 +291,7 @@ var WorkerMessageHandler = {
       var fonts = {};
       for (var i = 0, ii = dependency.length; i < ii; i++) {
         var dep = dependency[i];
-        if (dep.indexOf('g_font_') == 0) {
+        if (dep.indexOf('g_font_') === 0) {
           fonts[dep] = true;
         }
       }
@@ -328,7 +348,7 @@ var workerConsole = {
 
   timeEnd: function timeEnd(name) {
     var time = consoleTimer[name];
-    if (time == null) {
+    if (!time) {
       error('Unkown timer name ' + name);
     }
     this.log('Timer:', name, Date.now() - time);
