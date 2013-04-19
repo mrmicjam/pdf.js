@@ -1,5 +1,6 @@
 # PDF.JS
 
+
 pdf.js is an HTML5 technology experiment that explores building a faithful
 and efficient Portable Document Format (PDF) renderer without native code 
 assistance.
@@ -7,7 +8,8 @@ assistance.
 pdf.js is community-driven and supported by Mozilla Labs. Our goal is to 
 create a general-purpose, web standards-based platform for parsing and 
 rendering PDFs, and eventually release a PDF reader extension powered by 
-pdf.js.
+pdf.js. Integration with Firefox is a possibility if the experiment proves 
+successful.
 
  
 
@@ -17,7 +19,7 @@ pdf.js.
 
 For an online demo, visit:
 
-+ http://mozilla.github.io/pdf.js/web/viewer.html
++ http://mozilla.github.com/pdf.js/web/viewer.html
 
 This demo provides an interactive interface for displaying and browsing PDFs
 using the pdf.js API.
@@ -27,7 +29,7 @@ using the pdf.js API.
 A Firefox extension is availble in two places:
 
 + Stable Version: https://addons.mozilla.org/firefox/addon/pdfjs
-+ Development Version: http://mozilla.github.io/pdf.js/extensions/firefox/pdf.js.xpi
++ Development Version: http://mozilla.github.com/pdf.js/extensions/firefox/pdf.js.xpi
 
 The development extension should be quite stable but still might break from time to time.
 Also, note that the development extension is updated on every merge and by default Firefox will
@@ -107,7 +109,7 @@ More information about the contributor process can be found on the
 
 If you don't want to hack on the project or have little spare time, __you still
 can help!__ Just open PDFs in the 
-[online demo](http://mozilla.github.io/pdf.js/web/viewer.html) and report 
+[online demo](http://mozilla.github.com/pdf.js/web/viewer.html) and report 
 any breakage in rendering.
 
 Our Github contributors so far:

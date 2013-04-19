@@ -14,26 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/* jshint esnext:true */
-/* globals Components, Services, dump, XPCOMUtils, PdfStreamConverter,
-           PdfRedirector, APP_SHUTDOWN */
 
 'use strict';
 
 const RESOURCE_NAME = 'pdf.js';
 const EXT_PREFIX = 'extensions.uriloader@pdf.js';
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cm = Components.manager;
-const Cu = Components.utils;
-const Cr = Components.results;
+let Cc = Components.classes;
+let Ci = Components.interfaces;
+let Cm = Components.manager;
+let Cu = Components.utils;
 
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 Cu.import('resource://gre/modules/Services.jsm');
-
-var Ph = Cc['@mozilla.org/plugin/host;1'].getService(Ci.nsIPluginHost);
-var registerOverlayPreview = 'getPlayPreviewInfo' in Ph;
 
 function getBoolPref(pref, def) {
   try {
@@ -44,7 +37,7 @@ function getBoolPref(pref, def) {
 }
 
 function setStringPref(pref, value) {
-  var str = Cc['@mozilla.org/supports-string;1']
+  let str = Cc['@mozilla.org/supports-string;1']
               .createInstance(Ci.nsISupportsString);
   str.data = value;
   Services.prefs.setComplexValue(pref, Ci.nsISupportsString, str);
@@ -56,10 +49,8 @@ function log(str) {
   dump(str + '\n');
 }
 
-// Factory that registers/unregisters a constructor as a component.
-function Factory() {}
-
-Factory.prototype = {
+// Register/unregister a constructor as a component.
+let Factory = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory]),
   _targetConstructor: null,
 
@@ -82,7 +73,7 @@ Factory.prototype = {
   createInstance: function createInstance(aOuter, iid) {
     if (aOuter !== null)
       throw Cr.NS_ERROR_NO_AGGREGATION;
-    return (new (this._targetConstructor)()).QueryInterface(iid);
+    return (new (this._targetConstructor)).QueryInterface(iid);
   },
 
   // nsIFactory
@@ -92,10 +83,7 @@ Factory.prototype = {
   }
 };
 
-var pdfStreamConverterUrl = null;
-var pdfStreamConverterFactory = new Factory();
-var pdfRedirectorUrl = null;
-var pdfRedirectorFactory = new Factory();
+let pdfStreamConverterUrl = null;
 
 // As of Firefox 13 bootstrapped add-ons don't support automatic registering and
 // unregistering of resource urls and components/contracts. Until then we do
@@ -113,17 +101,7 @@ function startup(aData, aReason) {
   pdfStreamConverterUrl = aData.resourceURI.spec +
                           'components/PdfStreamConverter.js';
   Cu.import(pdfStreamConverterUrl);
-  pdfStreamConverterFactory.register(PdfStreamConverter);
-
-  if (registerOverlayPreview) {
-    pdfRedirectorUrl = aData.resourceURI.spec +
-                       'components/PdfRedirector.js';
-    Cu.import(pdfRedirectorUrl);
-    pdfRedirectorFactory.register(PdfRedirector);
-
-    Ph.registerPlayPreviewMimeType('application/pdf', true,
-      'data:application/x-moz-playpreview-pdfjs;,');
-  }
+  Factory.register(PdfStreamConverter);
 }
 
 function shutdown(aData, aReason) {
@@ -135,18 +113,10 @@ function shutdown(aData, aReason) {
   // Remove the resource url.
   resProt.setSubstitution(RESOURCE_NAME, null);
   // Remove the contract/component.
-  pdfStreamConverterFactory.unregister();
+  Factory.unregister();
   // Unload the converter
   Cu.unload(pdfStreamConverterUrl);
   pdfStreamConverterUrl = null;
-
-  if (registerOverlayPreview) {
-    pdfRedirectorFactory.unregister();
-    Cu.unload(pdfRedirectorUrl);
-    pdfRedirectorUrl = null;
-
-    Ph.unregisterPlayPreviewMimeType('application/pdf');
-  }
 }
 
 function install(aData, aReason) {

@@ -11,8 +11,7 @@ describe('font_post', function() {
       var font = new Font("font", new Stream(font2109), {
         loadedName: 'font',
         type: 'CIDFontType2',
-        differences: [],
-        baseEncoding: []
+        differences: []
       });
       ttx(font.data, function(result) { output = result; });
       runs(function() {
@@ -27,8 +26,7 @@ describe('font_post', function() {
       var font = new Font("font", new Stream(font2189), {
         loadedName: 'font',
         type: 'TrueType',
-        differences: [],
-        baseEncoding: []
+        differences: []
       });
       ttx(font.data, function(result) { output = result; });
       runs(function() {
@@ -43,8 +41,7 @@ describe('font_post', function() {
       var font = new Font("font", new Stream(font2374), {
         loadedName: 'font',
         type: 'TrueType',
-        differences: [],
-        baseEncoding: []
+        differences: []
       });
       ttx(font.data, function(result) { output = result; });
       runs(function() {

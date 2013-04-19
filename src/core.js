@@ -14,10 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/* globals assertWellFormed, calculateMD5, Catalog, error, info, isArray,
-           isArrayBuffer, isDict, isName, isStream, isString, Lexer,
-           Linearization, NullStream, PartialEvaluator, shadow, Stream,
-           StreamsSequenceStream, stringToPDFString, TODO, Util, warn, XRef */
 
 'use strict';
 
@@ -80,7 +76,7 @@ function getPdf(arg, callback) {
         calledErrorBack = true;
         params.error();
       }
-    };
+    }
   }
 
   xhr.onreadystatechange = function getPdfOnreadystatechange(e) {
@@ -100,33 +96,14 @@ function getPdf(arg, callback) {
 globalScope.PDFJS.getPdf = getPdf;
 globalScope.PDFJS.pdfBug = false;
 
-
 var Page = (function PageClosure() {
-
-  function getDefaultAnnotationAppearance(annotationDict) {
-    var appearanceState = annotationDict.get('AP');
-    if (!isDict(appearanceState)) {
-      return;
-    }
-
-    var appearance;
-    var appearances = appearanceState.get('N');
-    if (isDict(appearances)) {
-      var as = annotationDict.get('AS');
-      if (as && appearances.has(as.name)) {
-        appearance = appearances.get(as.name);
-      }
-    } else {
-      appearance = appearances;
-    }
-    return appearance;
-  }
-
   function Page(xref, pageIndex, pageDict, ref) {
     this.pageIndex = pageIndex;
     this.pageDict = pageDict;
     this.xref = xref;
     this.ref = ref;
+
+    this.displayReadyPromise = null;
   }
 
   Page.prototype = {
@@ -179,7 +156,7 @@ var Page = (function PageClosure() {
     get rotate() {
       var rotate = this.inheritPageProp('Rotate') || 0;
       // Normalize rotation so it's a multiple of 90 and between 0 and 270
-      if (rotate % 90 !== 0) {
+      if (rotate % 90 != 0) {
         rotate = 0;
       } else if (rotate >= 360) {
         rotate = rotate % 360;
@@ -217,17 +194,6 @@ var Page = (function PageClosure() {
                                 'p' + this.pageIndex + '_');
 
       var list = pe.getOperatorList(contentStream, resources, dependency);
-
-      var annotations = this.getAnnotationsForDraw();
-      var annotationEvaluator = new PartialEvaluator(
-        xref, handler, this.pageIndex,
-        'p' + this.pageIndex + '_annotation');
-      var annotationsList = annotationEvaluator.getAnnotationsOperatorList(
-          annotations, dependency);
-
-      Util.concatenateToArray(list.fnArray, annotationsList.fnArray);
-      Util.concatenateToArray(list.argsArray, annotationsList.argsArray);
-
       pe.optimizeQueue(list);
       return list;
     },
@@ -257,59 +223,7 @@ var Page = (function PageClosure() {
       }
       return links;
     },
-
     getAnnotations: function Page_getAnnotations() {
-      var annotations = this.getAnnotationsBase();
-      var items = [];
-      for (var i = 0, length = annotations.length; i < length; ++i) {
-        items.push(annotations[i].item);
-      }
-      return items;
-    },
-
-    getAnnotationsForDraw: function Page_getAnnotationsForDraw() {
-      var annotations = this.getAnnotationsBase();
-      var items = [];
-      for (var i = 0, length = annotations.length; i < length; ++i) {
-        var item = annotations[i].item;
-        var annotationDict = annotations[i].dict;
-
-        item.annotationFlags = annotationDict.get('F');
-
-        var appearance = getDefaultAnnotationAppearance(annotationDict);
-        if (appearance &&
-            // TODO(mack): The proper implementation requires that the
-            // appearance stream overrides Name, but we're currently
-            // doing it the other way around for 'Text' annotations since we
-            // have special rendering for it
-            item.type !== 'Text') {
-
-          item.appearance = appearance;
-          var appearanceDict = appearance.dict;
-          item.resources = appearanceDict.get('Resources');
-          item.bbox = appearanceDict.get('BBox') || [0, 0, 1, 1];
-          item.matrix = appearanceDict.get('Matrix') || [1, 0, 0, 1, 0 ,0];
-        }
-
-        var border = annotationDict.get('BS');
-        if (isDict(border) && !item.appearance) {
-          var borderWidth = border.has('W') ? border.get('W') : 1;
-          if (borderWidth !== 0) {
-            item.border = {
-              width: borderWidth,
-              type: border.get('S') || 'S',
-              rgb: annotationDict.get('C') || [0, 0, 1]
-            };
-          }
-        }
-
-        items.push(item);
-      }
-
-      return items;
-    },
-
-    getAnnotationsBase: function Page_getAnnotationsBase() {
       var xref = this.xref;
       function getInheritableProperty(annotation, name) {
         var item = annotation;
@@ -343,19 +257,17 @@ var Page = (function PageClosure() {
       var items = [];
       for (i = 0; i < n; ++i) {
         var annotationRef = annotations[i];
-        var annotation = xref.fetchIfRef(annotationRef);
+        var annotation = xref.fetch(annotationRef);
         if (!isDict(annotation))
           continue;
         var subtype = annotation.get('Subtype');
         if (!isName(subtype))
           continue;
+        var rect = annotation.get('Rect');
 
         var item = {};
         item.type = subtype.name;
-        var rect = annotation.get('Rect');
-        item.rect = Util.normalizeRect(rect);
-
-        var includeAnnotation = true;
+        item.rect = rect;
         switch (subtype.name) {
           case 'Link':
             var a = annotation.get('A');
@@ -400,14 +312,6 @@ var Page = (function PageClosure() {
             var fieldType = getInheritableProperty(annotation, 'FT');
             if (!isName(fieldType))
               break;
-
-            // Do not display digital signatures since we do not currently
-            // validate them.
-            if (fieldType.name === 'Sig') {
-              includeAnnotation = false;
-              break;
-            }
-
             item.fieldType = fieldType.name;
             // Building the full field name by collecting the field and
             // its ancestors 'T' properties and joining them using '.'.
@@ -456,18 +360,10 @@ var Page = (function PageClosure() {
               annotation.get('Name').name;
             break;
           default:
-            var appearance = getDefaultAnnotationAppearance(annotation);
-            if (!appearance) {
-              TODO('unimplemented annotation type: ' + subtype.name);
-            }
+            TODO('unimplemented annotation type: ' + subtype.name);
             break;
         }
-        if (includeAnnotation) {
-          items.push({
-            item: item,
-            dict: annotation
-          });
-        }
+        items.push(item);
       }
       return items;
     }
@@ -639,8 +535,7 @@ var PDFDocument = (function PDFDocumentClosure() {
     },
     getDocumentInfo: function PDFDocument_getDocumentInfo() {
       var docInfo = {
-        PDFFormatVersion: this.pdfFormatVersion,
-        IsAcroFormPresent: !!this.acroForm
+        PDFFormatVersion: this.pdfFormatVersion
       };
       if (this.xref.trailer.has('Info')) {
         var infoDict = this.xref.trailer.get('Info');

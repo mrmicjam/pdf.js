@@ -1,8 +1,6 @@
 *.pdf
 
 !tracemonkey.pdf
-!issue2391-1.pdf
-!issue2391-2.pdf
 !ArabicCIDTrueType.pdf
 !ThuluthFeatures.pdf
 !arial_unicode_ab_cidfont.pdf
@@ -29,7 +27,6 @@
 !issue1905.pdf
 !issue1249.pdf
 !smaskdim.pdf
-!endchar.pdf
 !type4psfunc.pdf
 !issue1350.pdf
 !S2.pdf
@@ -41,9 +38,3 @@
 !mixedfonts.pdf
 !shading_extend.pdf
 !noembed-identity.pdf
-!noembed-identity-2.pdf
-!noembed-jis7.pdf
-!noembed-eucjp.pdf
-!noembed-sjis.pdf
-!vertical.pdf
-!issue2099-1.pdf

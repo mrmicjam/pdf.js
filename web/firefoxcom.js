@@ -14,8 +14,6 @@
  */
 
 var FirefoxCom = (function FirefoxComClosure() {
-  'use strict';
-
   return {
     /**
      * Creates an event that the extension is listening for and will
@@ -28,13 +26,15 @@ var FirefoxCom = (function FirefoxComClosure() {
      */
     requestSync: function(action, data) {
       var request = document.createTextNode('');
+      request.setUserData('action', action, null);
+      request.setUserData('data', data, null);
+      request.setUserData('sync', true, null);
       document.documentElement.appendChild(request);
 
-      var sender = document.createEvent('CustomEvent');
-      sender.initCustomEvent('pdf.js.message', true, false,
-                             {action: action, data: data, sync: true});
+      var sender = document.createEvent('Events');
+      sender.initEvent('pdf.js.message', true, false);
       request.dispatchEvent(sender);
-      var response = sender.detail.response;
+      var response = request.getUserData('response');
       document.documentElement.removeChild(request);
       return response;
     },
@@ -48,10 +48,16 @@ var FirefoxCom = (function FirefoxComClosure() {
      */
     request: function(action, data, callback) {
       var request = document.createTextNode('');
+      request.setUserData('action', action, null);
+      request.setUserData('data', data, null);
+      request.setUserData('sync', false, null);
       if (callback) {
+        request.setUserData('callback', callback, null);
+
         document.addEventListener('pdf.js.response', function listener(event) {
           var node = event.target,
-              response = event.detail.response;
+              callback = node.getUserData('callback'),
+              response = node.getUserData('response');
 
           document.documentElement.removeChild(node);
 
@@ -61,10 +67,8 @@ var FirefoxCom = (function FirefoxComClosure() {
       }
       document.documentElement.appendChild(request);
 
-      var sender = document.createEvent('CustomEvent');
-      sender.initCustomEvent('pdf.js.message', true, false,
-                             {action: action, data: data, sync: false,
-                              callback: callback});
+      var sender = document.createEvent('HTMLEvents');
+      sender.initEvent('pdf.js.message', true, false);
       return request.dispatchEvent(sender);
     }
   };
