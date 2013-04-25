@@ -652,6 +652,8 @@ var WorkerTransport = (function WorkerTransportClosure() {
         if (components != 3 && components != 1)
           error('Only 3 component or 1 component can be returned');
 
+        // WF measure and convert through ImageMagick
+        /*
         var img = new Image();
         img.onload = (function messageHandler_onloadClosure() {
           var width = img.width;
@@ -678,6 +680,37 @@ var WorkerTransport = (function WorkerTransportClosure() {
           promise.resolve({ data: buf, width: width, height: height});
         }).bind(this);
         // http://stackoverflow.com/questions/6182315/how-to-do-base64-encoding-in-node-js
+        */
+
+        var buf = new Buffer(imageData, 'binary');
+        var image = {
+            // The promise requires image.width and image.height to be the
+            // correct dimensions for the image.
+            // wfImage.convertImage() will use wfImage.measureImage() to find
+            // the image dimensions.
+            /*
+            width: w,
+            height: h,
+            */
+            bytes: buf
+        };
+
+        // TODO: Replace this conversion. This is slow because it sends full rgba
+        // data back through stdout to this process in segments and then concats
+        // them together.
+        // Possible alternatives:
+        //  Replace stdout capture with a Stream (it may be faster).
+        //  Do the masking directly with IM operating on written files.
+        //  Use a canvas package for node like node-image and keep the pdfjs code.
+        PDFJS.convertImage(function (image) {
+                promise.resolve({data: image.bytes,
+                    width: image.width, height: image.height});
+            },
+            image,
+            'jpg',
+            'rgba');
+
+        /*
         var src;
         if (typeof window !== 'undefined') {
           // in a window use the window encode
@@ -690,6 +723,8 @@ var WorkerTransport = (function WorkerTransportClosure() {
         else
           console.log("err0r3d!");
         img.src = src;
+        */
+        // END WF
       });
     },
 
