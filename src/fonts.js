@@ -2303,6 +2303,12 @@ var Font = (function FontClosure() {
       // The file data is not specified. Trying to fix the font name
       // to be used with the canvas.font.
       var fontName = name.replace(/[,_]/g, '-');
+
+      // WF HC-627 'MS Sans Serif' is not recognized
+      if (fontName === 'MS Sans Serif') {
+          //this.type = 'TrueType';
+      }
+      // END WF
       fontName = stdFontMap[fontName] || nonStdFontMap[fontName] || fontName;
 
       this.bold = (fontName.search(/bold/gi) != -1);
