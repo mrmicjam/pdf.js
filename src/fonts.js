@@ -2304,11 +2304,6 @@ var Font = (function FontClosure() {
       // to be used with the canvas.font.
       var fontName = name.replace(/[,_]/g, '-');
 
-      // WF HC-627 'MS Sans Serif' is not recognized
-      if (fontName === 'MS Sans Serif') {
-          //this.type = 'TrueType';
-      }
-      // END WF
       fontName = stdFontMap[fontName] || nonStdFontMap[fontName] || fontName;
 
       this.bold = (fontName.search(/bold/gi) != -1);
@@ -4294,6 +4289,26 @@ var Font = (function FontClosure() {
           operatorList = this.charProcOperatorList[glyphName];
           fontCharCode = charcode;
           break;
+        // WF
+        // Moved default from below to fall into TrueType handling.
+        default:
+          //console.warn('Unsupported type: [' + this.type + ']', this.name,'\t',this.toFontChar[fontCharCode], '\t', charcode, '\t', this.differences[charcode], '\t', this.encoding[charcode], '\t',this.hasEncoding, '\t', this.isSymbolicFont);
+          // This is the one addition for Type1 versus Truetype:
+          if (this.noUnicodeAdaptation) {
+            //console.error('noUnicodeAdaptation for', this.name, this.noUnicodeAdaptation);
+            if (width !== this.widths[charcode]) {
+              console.error('widths are incorrect:', width, this.widths[charcode]);
+              console.log(width, this.widths[this.unicodeToCID[charcode] || charcode]);
+            }
+            // If it is a CID font, then unicodeToCID will be created by
+            // loadCidToUnicode().
+            if (this.unicodeToCID !== undefined) {
+              console.log('this.unicodeToCID');
+              console.log(this.unicodeToCID[charcode]);
+              width = this.widths[this.unicodeToCID[charcode] || charcode];
+            }
+          }
+        // END WF
         case 'TrueType':
           if (this.useToFontChar) {
             fontCharCode = this.toFontChar[charcode] || charcode;
@@ -4319,9 +4334,9 @@ var Font = (function FontClosure() {
           fontCharCode = glyphName in this.glyphNameMap ?
             this.glyphNameMap[glyphName] : GlyphsUnicode[glyphName];
           break;
-        default:
-          warn('Unsupported font type: ' + this.type);
-          break;
+        // WF
+        // Moved default to 'TrueType' to force display of un-typed fonts.
+        // END WF
       }
 
       var unicodeChars = !('toUnicode' in this) ? charcode :
