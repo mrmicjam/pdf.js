@@ -2314,6 +2314,20 @@ var Font = (function FontClosure() {
       // name ArialBlack for example will be replaced by Helvetica.
       this.black = (name.search(/Black/g) != -1);
 
+      // WF
+      var fixFontName = function fixFontName(fontName, font) {
+          var fontMap = {
+              // WF HC-627 'MS Sans Serif' is not recognized
+              'MS Sans Serif': ['Microsoft Sans Serif']
+          };
+          if (fontMap[fontName]) {
+              font.fallbackName = '\"' + fontMap[fontName].join('\",\"') +
+                                  '\",' + font.fallbackName;
+          }
+      };
+      fixFontName(fontName, this);
+      // END WF
+
       this.encoding = properties.baseEncoding;
       this.noUnicodeAdaptation = true;
       this.loadedName = fontName.split('-')[0];
