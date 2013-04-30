@@ -2315,17 +2315,7 @@ var Font = (function FontClosure() {
       this.black = (name.search(/Black/g) != -1);
 
       // WF
-      var fixFontName = function fixFontName(fontName, font) {
-          var fontMap = {
-              // WF HC-627 'MS Sans Serif' is not recognized
-              'MS Sans Serif': ['Microsoft Sans Serif']
-          };
-          if (fontMap[fontName]) {
-              font.fallbackName = '\"' + fontMap[fontName].join('\",\"') +
-                                  '\",' + font.fallbackName;
-          }
-      };
-      fixFontName(fontName, this);
+      PDFJS.updateFontFallback(fontName, this);
       // END WF
 
       this.encoding = properties.baseEncoding;
@@ -4304,21 +4294,18 @@ var Font = (function FontClosure() {
           fontCharCode = charcode;
           break;
         // WF
+        // HC-627 Handle no-type fonts as TrueType
         // Moved default from below to fall into TrueType handling.
         default:
-          //console.warn('Unsupported type: [' + this.type + ']', this.name,'\t',this.toFontChar[fontCharCode], '\t', charcode, '\t', this.differences[charcode], '\t', this.encoding[charcode], '\t',this.hasEncoding, '\t', this.isSymbolicFont);
           // This is the one addition for Type1 versus Truetype:
           if (this.noUnicodeAdaptation) {
-            //console.error('noUnicodeAdaptation for', this.name, this.noUnicodeAdaptation);
             if (width !== this.widths[charcode]) {
               console.error('widths are incorrect:', width, this.widths[charcode]);
               console.log(width, this.widths[this.unicodeToCID[charcode] || charcode]);
             }
             // If it is a CID font, then unicodeToCID will be created by
-            // loadCidToUnicode().
+            // loadCidToUnicode() and can contain widths.
             if (this.unicodeToCID !== undefined) {
-              console.log('this.unicodeToCID');
-              console.log(this.unicodeToCID[charcode]);
               width = this.widths[this.unicodeToCID[charcode] || charcode];
             }
           }
