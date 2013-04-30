@@ -4299,10 +4299,6 @@ var Font = (function FontClosure() {
         default:
           // This is the one addition for Type1 versus Truetype:
           if (this.noUnicodeAdaptation) {
-            if (width !== this.widths[charcode]) {
-              console.error('widths are incorrect:', width, this.widths[charcode]);
-              console.log(width, this.widths[this.unicodeToCID[charcode] || charcode]);
-            }
             // If it is a CID font, then unicodeToCID will be created by
             // loadCidToUnicode() and can contain widths.
             if (this.unicodeToCID !== undefined) {
