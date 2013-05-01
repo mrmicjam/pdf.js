@@ -4294,10 +4294,8 @@ var Font = (function FontClosure() {
           fontCharCode = charcode;
           break;
         // WF
-        // HC-627 Handle no-type fonts as TrueType
-        // Moved default from below to fall into TrueType handling.
-        default:
-          // This is the one addition for Type1 versus Truetype:
+        // HC-627 Handle no-type fonts with checks for all types
+        case '':
           if (this.noUnicodeAdaptation) {
             // If it is a CID font, then unicodeToCID will be created by
             // loadCidToUnicode() and can contain widths.
@@ -4331,9 +4329,9 @@ var Font = (function FontClosure() {
           fontCharCode = glyphName in this.glyphNameMap ?
             this.glyphNameMap[glyphName] : GlyphsUnicode[glyphName];
           break;
-        // WF
-        // Moved default to 'TrueType' to force display of un-typed fonts.
-        // END WF
+        default:
+          warn('Unsupported font type: ' + this.type);
+          break;
       }
 
       var unicodeChars = !('toUnicode' in this) ? charcode :
