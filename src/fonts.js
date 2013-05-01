@@ -4297,12 +4297,40 @@ var Font = (function FontClosure() {
         // HC-627 Handle no-type fonts with checks for all types
         case '':
           if (this.noUnicodeAdaptation) {
-            // If it is a CID font, then unicodeToCID will be created by
-            // loadCidToUnicode() and can contain widths.
+            // Truetype checks for useToFontChar first. We expect this to not be
+            // set for other font types.
+            if (this.useToFontChar) {
+              fontCharCode = this.toFontChar[charcode] || charcode;
+              break;
+            }
+            // CID creates unicodeToCID[]
             if (this.unicodeToCID !== undefined) {
               width = this.widths[this.unicodeToCID[charcode] || charcode];
             }
+
+            // Include operations from TrueType case below until the
+            // (this.noUnicodeAdaptation) condition.
+            var glyphName = this.differences[charcode] || this.encoding[charcode];
+            if (!glyphName)
+              glyphName = Encodings.StandardEncoding[charcode];
+            if (!isNum(width))
+              width = this.widths[glyphName];
+
+            // Type1 uses mapPrivateUseChars to catch copyright[sans/serif] glyphs.
+            fontCharCode = mapPrivateUseChars(GlyphsUnicode[glyphName] ||
+              charcode);
+
+            // Type3 updates the operatorList.
+            if (this.charProcOperatorList !== undefined &&
+                this.charProcOperatorList[glyphName] !== undefined) {
+              operatorList = this.charProcOperatorList[glyphName];
+            }
+
+            // Truetype case breaks after fontCharCode is set in
+            // noUnicodeAdaptation case.
+            break;
           }
+          // If there may be a unicode lookup, continue into 'TrueType' case:
         // END WF
         case 'TrueType':
           if (this.useToFontChar) {
