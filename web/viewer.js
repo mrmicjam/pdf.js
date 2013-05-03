@@ -17,18 +17,19 @@
 
 'use strict';
 
-var kDefaultURL = 'compressed.tracemonkey-pldi-09.pdf';
-var kDefaultScale = 'auto';
-var kDefaultScaleDelta = 1.1;
-var kUnknownScale = 0;
-var kCacheSize = 20;
-var kCssUnits = 96.0 / 72.0;
-var kScrollbarPadding = 40;
-var kVerticalPadding = 5;
-var kMinScale = 0.25;
-var kMaxScale = 4.0;
-var kImageDirectory = './images/';
-var kSettingsMemory = 20;
+var DEFAULT_URL = 'compressed.tracemonkey-pldi-09.pdf';
+var DEFAULT_SCALE = 'auto';
+var DEFAULT_SCALE_DELTA = 1.1;
+var UNKNOWN_SCALE = 0;
+var CACHE_SIZE = 20;
+var CSS_UNITS = 96.0 / 72.0;
+var SCROLLBAR_PADDING = 40;
+var VERTICAL_PADDING = 5;
+var MIN_SCALE = 0.25;
+var MAX_SCALE = 4.0;
+var IMAGE_DIR = './images/';
+var SETTINGS_MEMORY = 20;
+var ANNOT_MIN_SIZE = 10;
 var RenderingStates = {
   INITIAL: 0,
   RUNNING: 1,
@@ -41,8 +42,6 @@ var FindStates = {
   FIND_WRAPPED: 2,
   FIND_PENDING: 3
 };
-
-var ANNOT_MIN_SIZE = 10;
 
 //#if (FIREFOX || MOZCENTRAL || B2G || GENERIC || CHROME)
 //PDFJS.workerSrc = '../build/pdf.js';
@@ -186,7 +185,7 @@ var Settings = (function SettingsClosure() {
       database = JSON.parse(database);
       if (!('files' in database))
         database.files = [];
-      if (database.files.length >= kSettingsMemory)
+      if (database.files.length >= SETTINGS_MEMORY)
         database.files.shift();
       var index;
       for (var i = 0, length = database.files.length; i < length; i++) {
@@ -228,7 +227,7 @@ var Settings = (function SettingsClosure() {
   return Settings;
 })();
 
-var cache = new Cache(kCacheSize);
+var cache = new Cache(CACHE_SIZE);
 var currentPageNumber = 1;
 
 var PDFFindController = {
@@ -625,11 +624,11 @@ var PDFFindBar = {
 
       case FindStates.FIND_WRAPPED:
         if (previous) {
-          findMsg = mozL10n.get('find_wrapped_to_bottom', null,
-                                'Reached top of page, continued from bottom');
+          findMsg = mozL10n.get('find_reached_top', null,
+                      'Reached top of document, continued from bottom');
         } else {
-          findMsg = mozL10n.get('find_wrapped_to_top', null,
-                                'Reached end of page, continued from top');
+          findMsg = mozL10n.get('find_reached_bottom', null,
+                                'Reached end of document, continued from top');
         }
         break;
     }
@@ -676,7 +675,7 @@ var PDFFindBar = {
 var PDFView = {
   pages: [],
   thumbnails: [],
-  currentScale: kUnknownScale,
+  currentScale: UNKNOWN_SCALE,
   currentScaleValue: null,
   initialBookmark: document.location.hash.substring(1),
   startedTextExtraction: false,
@@ -742,7 +741,7 @@ var PDFView = {
 
     var pages = this.pages;
     for (var i = 0; i < pages.length; i++)
-      pages[i].update(val * kCssUnits);
+      pages[i].update(val * CSS_UNITS);
 
     if (!noScroll && this.currentScale != val)
       this.pages[this.page - 1].scrollIntoView();
@@ -772,10 +771,10 @@ var PDFView = {
       return;
     }
 
-    var pageWidthScale = (container.clientWidth - kScrollbarPadding) /
-                          currentPage.width * currentPage.scale / kCssUnits;
-    var pageHeightScale = (container.clientHeight - kVerticalPadding) /
-                           currentPage.height * currentPage.scale / kCssUnits;
+    var pageWidthScale = (container.clientWidth - SCROLLBAR_PADDING) /
+                          currentPage.width * currentPage.scale / CSS_UNITS;
+    var pageHeightScale = (container.clientHeight - VERTICAL_PADDING) /
+                           currentPage.height * currentPage.scale / CSS_UNITS;
     switch (value) {
       case 'page-actual':
         scale = 1;
@@ -799,14 +798,14 @@ var PDFView = {
   },
 
   zoomIn: function pdfViewZoomIn() {
-    var newScale = (this.currentScale * kDefaultScaleDelta).toFixed(2);
-    newScale = Math.min(kMaxScale, newScale);
+    var newScale = (this.currentScale * DEFAULT_SCALE_DELTA).toFixed(2);
+    newScale = Math.min(MAX_SCALE, newScale);
     this.parseScale(newScale, true);
   },
 
   zoomOut: function pdfViewZoomOut() {
-    var newScale = (this.currentScale / kDefaultScaleDelta).toFixed(2);
-    newScale = Math.max(kMinScale, newScale);
+    var newScale = (this.currentScale / DEFAULT_SCALE_DELTA).toFixed(2);
+    newScale = Math.max(MIN_SCALE, newScale);
     this.parseScale(newScale, true);
   },
 
@@ -858,6 +857,11 @@ var PDFView = {
     var doc = document.documentElement;
     var support = doc.requestFullscreen || doc.mozRequestFullScreen ||
                   doc.webkitRequestFullScreen;
+
+    // Disable fullscreen button if we're in an iframe
+    if (!!window.frameElement)
+      support = false;
+
     Object.defineProperty(this, 'supportsFullScreen', { value: support,
                                                         enumerable: true,
                                                         configurable: true,
@@ -876,6 +880,24 @@ var PDFView = {
                                                             configurable: true,
                                                             writable: false });
     return support;
+  },
+
+  get supportsDocumentFonts() {
+    var support = true;
+//#if !(FIREFOX || MOZCENTRAL)
+//#else
+//  support = FirefoxCom.requestSync('supportsDocumentFonts');
+//#endif
+    Object.defineProperty(this, 'supportsDocumentFonts', { value: support,
+                                                           enumerable: true,
+                                                           configurable: true,
+                                                           writable: false });
+    return support;
+  },
+
+  get isHorizontalScrollbarEnabled() {
+    var div = document.getElementById('viewerContainer');
+    return div.scrollWidth > div.clientWidth;
   },
 
   initPassiveLoading: function pdfViewInitPassiveLoading() {
@@ -908,12 +930,19 @@ var PDFView = {
   setTitleUsingUrl: function pdfViewSetTitleUsingUrl(url) {
     this.url = url;
     try {
-      document.title = decodeURIComponent(getFileName(url)) || url;
+      this.setTitle(decodeURIComponent(getFileName(url)) || url);
     } catch (e) {
       // decodeURIComponent may throw URIError,
       // fall back to using the unprocessed url in that case
-      document.title = url;
+      this.setTitle(url);
     }
+  },
+
+  setTitle: function pdfViewSetTitle(title) {
+    document.title = title;
+//#if B2G
+//  document.getElementById('activityTitle').textContent = title;
+//#endif
   },
 
   open: function pdfViewOpen(url, scale, password) {
@@ -1109,8 +1138,9 @@ var PDFView = {
    *                            and optionally a 'stack' property.
    */
   error: function pdfViewError(message, moreInfo) {
-    var moreInfoText = mozL10n.get('error_build', {build: PDFJS.build},
-      'PDF.JS Build: {{build}}') + '\n';
+    var moreInfoText = mozL10n.get('error_version_info',
+      {version: PDFJS.version || '?', build: PDFJS.build || '?'},
+      'PDF.js v{{version}} (build: {{build}})') + '\n';
     if (moreInfo) {
       moreInfoText +=
         mozL10n.get('error_message', {message: moreInfo.message},
@@ -1277,6 +1307,12 @@ var PDFView = {
       self.documentInfo = info;
       self.metadata = metadata;
 
+      // Provides some basic debug information
+      console.log('PDF ' + pdfDocument.fingerprint + ' [' +
+                  info.PDFFormatVersion + ' ' + (info.Producer || '-') +
+                  ' / ' + (info.Creator || '-') + ']' +
+                  (PDFJS.version ? ' (PDF.js: ' + PDFJS.version + ')' : ''));
+
       var pdfTitle;
       if (metadata) {
         if (metadata.has('dc:title'))
@@ -1287,7 +1323,7 @@ var PDFView = {
         pdfTitle = info['Title'];
 
       if (pdfTitle)
-        document.title = pdfTitle + ' - ' + document.title;
+        self.setTitle(pdfTitle + ' - ' + document.title);
     });
   },
 
@@ -1307,10 +1343,10 @@ var PDFView = {
       this.page = 1;
     }
 
-    if (PDFView.currentScale === kUnknownScale) {
+    if (PDFView.currentScale === UNKNOWN_SCALE) {
       // Scale was not initialized: invalid bookmark or scale was not specified.
       // Setting the default one.
-      this.parseScale(kDefaultScale, true);
+      this.parseScale(DEFAULT_SCALE, true);
     }
   },
 
@@ -1832,7 +1868,7 @@ var PageView = function pageView(container, pdfPage, id, scale,
       }
       var image = createElementWithStyle('img', item, rect);
       var iconName = item.name;
-      image.src = kImageDirectory + 'annotation-' +
+      image.src = IMAGE_DIR + 'annotation-' +
         iconName.toLowerCase() + '.svg';
       image.alt = mozL10n.get('text_annotation_type', {type: iconName},
         '[{{type}} Annotation]');
@@ -1936,10 +1972,10 @@ var PageView = function pageView(container, pdfPage, id, scale,
           y = dest[3];
           width = dest[4] - x;
           height = dest[5] - y;
-          widthScale = (this.container.clientWidth - kScrollbarPadding) /
-            width / kCssUnits;
-          heightScale = (this.container.clientHeight - kScrollbarPadding) /
-            height / kCssUnits;
+          widthScale = (this.container.clientWidth - SCROLLBAR_PADDING) /
+            width / CSS_UNITS;
+          heightScale = (this.container.clientHeight - SCROLLBAR_PADDING) /
+            height / CSS_UNITS;
           scale = Math.min(widthScale, heightScale);
           break;
         default:
@@ -1948,8 +1984,8 @@ var PageView = function pageView(container, pdfPage, id, scale,
 
       if (scale && scale !== PDFView.currentScale)
         PDFView.parseScale(scale, true, true);
-      else if (PDFView.currentScale === kUnknownScale)
-        PDFView.parseScale(kDefaultScale, true, true);
+      else if (PDFView.currentScale === UNKNOWN_SCALE)
+        PDFView.parseScale(DEFAULT_SCALE, true, true);
 
       var boundingRect = [
         this.viewport.convertToViewportPoint(x, y),
@@ -2019,6 +2055,10 @@ var PageView = function pageView(container, pdfPage, id, scale,
     if (outputScale.scaled) {
       ctx.scale(outputScale.sx, outputScale.sy);
     }
+//#if (FIREFOX || MOZCENTRAL)
+//  // Checking if document fonts are used only once
+//  var checkIfDocumentFontsUsed = !PDFView.pdfDocument.embeddedFontsUsed;
+//#endif
 
     // Rendering area
 
@@ -2031,6 +2071,14 @@ var PageView = function pageView(container, pdfPage, id, scale,
         delete self.loadingIconDiv;
       }
 
+//#if (FIREFOX || MOZCENTRAL)
+//    if (checkIfDocumentFontsUsed && PDFView.pdfDocument.embeddedFontsUsed &&
+//        !PDFView.supportsDocumentFonts) {
+//      console.error(mozL10n.get('web_fonts_disabled', null,
+//        'Web fonts are disabled: unable to use embedded PDF fonts.'));
+//      PDFView.fallback();
+//    }
+//#endif
       if (error) {
         PDFView.error(mozL10n.get('rendering_error', null,
           'An error occurred while rendering the page.'), error);
@@ -2085,12 +2133,18 @@ var PageView = function pageView(container, pdfPage, id, scale,
   this.beforePrint = function pageViewBeforePrint() {
     var pdfPage = this.pdfPage;
     var viewport = pdfPage.getViewport(1);
-
+    // Use the same hack we use for high dpi displays for printing to get better
+    // output until bug 811002 is fixed in FF.
+    var PRINT_OUTPUT_SCALE = 2;
     var canvas = this.canvas = document.createElement('canvas');
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
-    canvas.style.width = viewport.width + 'pt';
-    canvas.style.height = viewport.height + 'pt';
+    canvas.width = Math.floor(viewport.width) * PRINT_OUTPUT_SCALE;
+    canvas.height = Math.floor(viewport.height) * PRINT_OUTPUT_SCALE;
+    canvas.style.width = (PRINT_OUTPUT_SCALE * viewport.width) + 'pt';
+    canvas.style.height = (PRINT_OUTPUT_SCALE * viewport.height) + 'pt';
+    var cssScale = 'scale(' + (1 / PRINT_OUTPUT_SCALE) + ', ' +
+                              (1 / PRINT_OUTPUT_SCALE) + ')';
+    CustomStyle.setProp('transform' , canvas, cssScale);
+    CustomStyle.setProp('transformOrigin' , canvas, '0% 0%');
 
     var printContainer = document.getElementById('printContainer');
     printContainer.appendChild(canvas);
@@ -2098,6 +2152,13 @@ var PageView = function pageView(container, pdfPage, id, scale,
     var self = this;
     canvas.mozPrintCallback = function(obj) {
       var ctx = obj.context;
+
+      ctx.save();
+      ctx.fillStyle = 'rgb(255, 255, 255)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.restore();
+      ctx.scale(PRINT_OUTPUT_SCALE, PRINT_OUTPUT_SCALE);
+
       var renderContext = {
         canvasContext: ctx,
         viewport: viewport
@@ -2427,9 +2488,9 @@ var TextLayerBuilder = function textLayerBuilder(textLayerDiv, pageIdx) {
   this.setupRenderLayoutTimer = function textLayerSetupRenderLayoutTimer() {
     // Schedule renderLayout() if user has been scrolling, otherwise
     // run it right away
-    var kRenderDelay = 200; // in ms
+    var RENDER_DELAY = 200; // in ms
     var self = this;
-    if (Date.now() - PDFView.lastScroll > kRenderDelay) {
+    if (Date.now() - PDFView.lastScroll > RENDER_DELAY) {
       // Render right away
       this.renderLayer();
     } else {
@@ -2438,7 +2499,7 @@ var TextLayerBuilder = function textLayerBuilder(textLayerDiv, pageIdx) {
         clearTimeout(this.renderTimer);
       this.renderTimer = setTimeout(function() {
         self.setupRenderLayoutTimer();
-      }, kRenderDelay);
+      }, RENDER_DELAY);
     }
   };
 
@@ -2688,7 +2749,7 @@ document.addEventListener('DOMContentLoaded', function webViewerLoad(evt) {
   var params = PDFView.parseQueryString(document.location.search.substring(1));
 
 //#if !(FIREFOX || MOZCENTRAL)
-  var file = params.file || kDefaultURL;
+  var file = params.file || DEFAULT_URL;
 //#else
 //var file = window.location.toString()
 //#endif
@@ -2714,7 +2775,7 @@ document.addEventListener('DOMContentLoaded', function webViewerLoad(evt) {
   var locale = navigator.language;
   if ('locale' in hashParams)
     locale = hashParams['locale'];
-  mozL10n.language.code = locale;
+  mozL10n.setLanguage(locale);
 //#endif
 
   if ('textLayer' in hashParams) {
@@ -2990,7 +3051,7 @@ function selectScaleOption(value) {
 }
 
 window.addEventListener('localized', function localized(evt) {
-  document.getElementsByTagName('html')[0].dir = mozL10n.language.direction;
+  document.getElementsByTagName('html')[0].dir = mozL10n.getDirection();
 }, true);
 
 window.addEventListener('scalechange', function scalechange(evt) {
@@ -3090,6 +3151,7 @@ window.addEventListener('keydown', function keydown(evt) {
       case 61: // FF/Mac '='
       case 107: // FF '+' and '='
       case 187: // Chrome '+'
+      case 171: // FF with German keyboard
         PDFView.zoomIn();
         handled = true;
         break;
@@ -3100,7 +3162,8 @@ window.addEventListener('keydown', function keydown(evt) {
         handled = true;
         break;
       case 48: // '0'
-        PDFView.parseScale(kDefaultScale, true);
+      case 96: // '0' on Numpad of Swedish keyboard
+        PDFView.parseScale(DEFAULT_SCALE, true);
         handled = true;
         break;
     }
@@ -3147,6 +3210,10 @@ window.addEventListener('keydown', function keydown(evt) {
         }
         //  in fullscreen mode falls throw here
       case 37: // left arrow
+        // horizontal scrolling using arrow keys
+        if (PDFView.isHorizontalScrollbarEnabled) {
+          break;
+        }
       case 75: // 'k'
       case 80: // 'p'
         PDFView.page--;
@@ -3160,6 +3227,10 @@ window.addEventListener('keydown', function keydown(evt) {
         }
         //  in fullscreen mode falls throw here
       case 39: // right arrow
+        // horizontal scrolling using arrow keys
+        if (PDFView.isHorizontalScrollbarEnabled) {
+          break;
+        }
       case 74: // 'j'
       case 78: // 'n'
         PDFView.page++;
@@ -3225,17 +3296,10 @@ window.addEventListener('afterprint', function afterPrint(evt) {
 //#if B2G
 //window.navigator.mozSetMessageHandler('activity', function(activity) {
 //  var url = activity.source.data.url;
-//  // Temporarily get the data here since the cross domain xhr is broken in
-//  // the worker currently, see bug 761227.
-//  var params = {
-//    url: url,
-//    error: function(e) {
-//      PDFView.error(mozL10n.get('loading_error', null,
-//                    'An error occurred while loading the PDF.'), e);
-//    }
-//  };
-//  PDFJS.getPdf(params, function successCallback(data) {
-//    PDFView.open(data, 0);
+//  PDFView.open(url);
+//  var cancelButton = document.getElementById('activityClose');
+//  cancelButton.addEventListener('click', function() {
+//    activity.postResult('close');
 //  });
 //});
 //#endif

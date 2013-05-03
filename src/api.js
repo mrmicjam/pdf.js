@@ -91,6 +91,13 @@ var PDFDocumentProxy = (function PDFDocumentProxyClosure() {
       return this.pdfInfo.fingerprint;
     },
     /**
+     * @return {boolean} true if embedded document fonts are in use. Will be
+     * set during rendering of the pages.
+     */
+    get embeddedFontsUsed() {
+      return this.transport.embeddedFontsUsed;
+    },
+    /**
      * @param {number} The page number to get. The first page is 1.
      * @return {Promise} A promise that is resolved with a {PDFPageProxy}
      * object.
@@ -337,6 +344,9 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
           warn('Error during font loading: ' + obj.error);
           continue;
         }
+        if (!obj.coded) {
+          this.transport.embeddedFontsUsed = true;
+        }
         fontObjs.push(obj);
       }
 
@@ -442,7 +452,7 @@ var WorkerTransport = (function WorkerTransportClosure() {
 
     this.pageCache = [];
     this.pagePromises = [];
-    this.fontsLoading = {};
+    this.embeddedFontsUsed = false;
 
     // If worker support isn't disabled explicit and the browser has worker
     // support, create a new web worker and test if it/the browser fullfills
@@ -598,7 +608,8 @@ var WorkerTransport = (function WorkerTransportClosure() {
         switch (type) {
           case 'JpegStream':
             var imageData = data[3];
-            loadJpegStream(id, imageData, pageProxy.objs);
+            //loadJpegStream(id, imageData, pageProxy.objs);
+            pageProxy.objs.resolve(id, imageData);
             break;
           case 'Image':
             var imageData = data[3];
@@ -666,7 +677,18 @@ var WorkerTransport = (function WorkerTransportClosure() {
           }
           promise.resolve({ data: buf, width: width, height: height});
         }).bind(this);
-        var src = 'data:image/jpeg;base64,' + window.btoa(imageData);
+        // http://stackoverflow.com/questions/6182315/how-to-do-base64-encoding-in-node-js
+        var src;
+        if (typeof window !== 'undefined') {
+          // in a window use the window encode
+          src = 'data:image/jpeg;base64,' + window.btoa(imageData);
+        }
+        else if (typeof Buffer !== 'undefined') {
+          // on Node use the node encode
+          src = 'data:image/jpeg;base64,' + new Buffer(imageData).toString('base64');
+        }
+        else
+          console.log("err0r3d!");
         img.src = src;
       });
     },

@@ -17,6 +17,8 @@
 
 'use strict';
 
+var xml2js = require('xml2js');
+
 var Metadata = PDFJS.Metadata = (function MetadataClosure() {
   function fixMetadata(meta) {
     return meta.replace(/>\\376\\377([^<]+)/g, function(all, codes) {
@@ -40,15 +42,23 @@ var Metadata = PDFJS.Metadata = (function MetadataClosure() {
       // Ghostscript produces invalid metadata
       meta = fixMetadata(meta);
 
-      var parser = new DOMParser();
-      meta = parser.parseFromString(meta, 'application/xml');
+      // jon -- switch out DOMParser (tied to browser) with xml2js
+      var parser = new xml2js.Parser();
+      meta = parser.parseString(meta, function (err, result) {
+        this.metaDocument = meta;
+        this.metadata = {};
+        this.parse();
+      });
     } else if (!(meta instanceof Document)) {
-      error('Metadata: Invalid metadata object');
+        error('Metadata: Invalid metadata object');
+    } else {
+        // jon -- remove DOM/window references
+        // slight rearranging here: xml2js is asynchronous
+        // figure out how to test this
+        this.metaDocument = meta;
+        this.metadata = {};
+        this.parse();
     }
-
-    this.metaDocument = meta;
-    this.metadata = {};
-    this.parse();
   }
 
   Metadata.prototype = {
