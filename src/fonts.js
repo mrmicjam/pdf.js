@@ -3865,6 +3865,25 @@ var Font = (function FontClosure() {
           data: stringToArray(createOS2Table(properties, glyphs, override))
         });
       }
+      // WF HC-967 set all generated OTF as installable.
+      // This allows IE to load the font.
+      else {
+        if (os2.data[9] !== 0) {
+          var fontPerm = {0: 'installable',
+                          2: 'not embeddable',
+                          4: 'printable document',
+                          8: 'editable document'};
+          var stream = new Stream(os2.data);
+          stream.getBytes(8); // skip to fsType
+          var fsType = int16(stream.getBytes(2));
+          console.warn('Changing font embedding permissions from',
+                       fsType, '"' + fontPerm[fsType] + '" to',
+                       '0 "installable".');
+
+          os2.data[9] = 0;
+        }
+      }
+      // END WF
 
       // Rewrite the 'post' table if needed
       if (!post) {
