@@ -2254,11 +2254,8 @@ var Font = (function FontClosure() {
       for (var i in data) {
         this[i] = data[i];
       }
-      this.logB = ' Font load 1 ';
       return;
     }
-    this.logB = ' Font load 2:';
-    this.logB += name + properties.loadedName;
 
     this.name = name;
     this.loadedName = properties.loadedName;
