@@ -2254,8 +2254,11 @@ var Font = (function FontClosure() {
       for (var i in data) {
         this[i] = data[i];
       }
+      this.logB = ' Font load 1 ';
       return;
     }
+    this.logB = ' Font load 2:';
+    this.logB += name + properties.loadedName;
 
     this.name = name;
     this.loadedName = properties.loadedName;
@@ -3869,6 +3872,7 @@ var Font = (function FontClosure() {
       // This allows IE to load the font.
       else {
         if (os2.data[9] !== 0) {
+          // http://www.microsoft.com/typography/otspec/os2.htm#fst
           var fontPerm = {0: 'installable',
                           2: 'not embeddable',
                           4: 'printable document',
