@@ -3875,24 +3875,7 @@ var Font = (function FontClosure() {
       }
       // WF: Modify existing os2 tables.
       else {
-        PDFJS.updateOS2Table(os2);
-            /*
-        if (os2.data[9] !== 0) {
-          // http://www.microsoft.com/typography/otspec/os2.htm#fst
-          var fontPerm = {0: 'installable',
-                          2: 'not embeddable',
-                          4: 'printable document',
-                          8: 'editable document'};
-          var stream = new Stream(os2.data);
-          stream.getBytes(8); // skip to fsType
-          var fsType = int16(stream.getBytes(2));
-          console.warn('Changing font embedding permissions from',
-                       fsType, '"' + fontPerm[fsType] + '" to',
-                       '0 "installable".');
-
-          os2.data[9] = 0;
-        }
-          */
+        PDFJS.updateOS2Table(this, os2);
       }
       // END WF
 
