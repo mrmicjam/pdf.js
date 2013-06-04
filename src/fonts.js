@@ -3868,9 +3868,10 @@ var Font = (function FontClosure() {
           data: stringToArray(createOS2Table(properties, glyphs, override))
         });
       }
-      // WF HC-967 set all generated OTF as installable.
-      // This allows IE to load the font.
+      // WF: Modify existing os2 tables.
       else {
+        PDFJS.updateOS2Table(os2);
+            /*
         if (os2.data[9] !== 0) {
           // http://www.microsoft.com/typography/otspec/os2.htm#fst
           var fontPerm = {0: 'installable',
@@ -3886,6 +3887,7 @@ var Font = (function FontClosure() {
 
           os2.data[9] = 0;
         }
+          */
       }
       // END WF
 
