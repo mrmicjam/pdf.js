@@ -282,6 +282,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
         insertDependency([objId]);
         args = [objId, w, h];
 
+        // WF convert through ImageMagick
         if (image instanceof JpegStream) {
             fn = 'paintJpegXObject';
 
@@ -291,7 +292,6 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
             };
 
             if (!image.isNativelySupported(xref, resources)) {
-
                 PDFJS.convertImage(function (image) {
                         imageData.path = PDFJS.saveImage(image.bytes, w, h, 'jpg');
                         handler.send('obj',
@@ -329,6 +329,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
                 handler.send('obj', [objId, pageIndex, 'Image', imgData]);
               }, handler, xref, resources, image, inline);
         }
+        // END WF
       }
 
       if (!queue)
