@@ -510,6 +510,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
                       // We support the default so don't trigger the TODO.
                       if (!isName(value) || value.name != 'None')
                         TODO('graphic state operator ' + key);
+                      throw PDFJS.WFSoftMask;
                       break;
                     // Only generate info log messages for the following since
                     // they are unlikey to have a big impact on the rendering.
