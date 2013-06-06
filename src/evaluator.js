@@ -302,7 +302,6 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
             } else {
                 // No conversion needed for natively supported jpeg rgb.
                 imageData.path = PDFJS.saveImage(image.bytes, w, h, 'jpg');
-                image.bytes = [];
                 handler.send('obj',
                              [objId, pageIndex, 'JpegStream', imageData]);
             }
