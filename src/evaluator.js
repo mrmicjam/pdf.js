@@ -310,6 +310,8 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
             if (!softMask && !mask) {
                 // no softMask or mask, so we use the jpeg as-is
                 return;
+            } else {
+                throw PDFJS.WFSoftMask;
             }
         } else {
             fn = 'paintImageXObject';
