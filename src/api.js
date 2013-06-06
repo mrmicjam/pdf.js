@@ -652,7 +652,6 @@ var WorkerTransport = (function WorkerTransportClosure() {
         if (components != 3 && components != 1)
           error('Only 3 component or 1 component can be returned');
 
-        throw PDFJS.WFJpegDecode;
         // WF measure and convert through ImageMagick
         /*
         var img = new Image();
