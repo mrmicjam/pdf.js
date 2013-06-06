@@ -1443,7 +1443,15 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
       // Setup the current ctx so when the group is popped we draw it the right
       // location.
-      currentCtx.setTransform(1, 0, 0, 1, 0, 0);
+      /*
+        // Jon - replaced this call with ctx.scaleCanvas();
+        currentCtx.setTransform(1,0,0,1,0,0);
+       */
+
+      // HC-580
+      // Rather than resetting the transform, reset the transform and scale it
+      // by its actual size in lib_viewer.
+      currentCtx.scaleCanvas();
       currentCtx.translate(offsetX, offsetY);
 
       // The transparency group inherits all off the current graphics state
