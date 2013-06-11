@@ -429,7 +429,15 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var width = this.ctx.canvas.width;
       var height = this.ctx.canvas.height;
       if (transparency) {
-        this.ctx.clearRect(0, 0, width, height);
+        // Begin WF
+        var savedFillStyle = this.ctx.fillStyle;
+        this.ctx.fillStyle = 'white';
+        this.ctx.fillRect(0, 0, width, height);
+        this.ctx.fillStyle = savedFillStyle;
+        // End WF
+        /*
+          this.ctx.clearRect(0, 0, width, height);
+        */
       } else {
         this.ctx.mozOpaque = true;
         this.ctx.save();
