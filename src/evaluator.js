@@ -309,6 +309,8 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
             if (!softMask && !mask) {
                 // no softMask or mask, so we use the jpeg as-is
                 return;
+            } else {
+                throw PDFJS.WFSoftMask;
             }
         } else {
             fn = 'paintImageXObject';
@@ -506,8 +508,10 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
                       break;
                     case 'SMask':
                       // We support the default so don't trigger the TODO.
-                      if (!isName(value) || value.name != 'None')
+                      if (!isName(value) || value.name != 'None') {
                         TODO('graphic state operator ' + key);
+                        throw PDFJS.WFSoftMask;
+                      }
                       break;
                     // Only generate info log messages for the following since
                     // they are unlikey to have a big impact on the rendering.
