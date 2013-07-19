@@ -20,7 +20,12 @@
 // Unicode Private Use Area
 var CMAP_GLYPH_OFFSET = 0xE000;
 var GLYPH_AREA_SIZE = 0x1900;
-var SYMBOLIC_FONT_GLYPH_OFFSET = 0xF000;
+// WF
+// Workaround for Private Use Area characters in Chrome on Windows
+// http://code.google.com/p/chromium/issues/detail?id=122465
+// https://github.com/mozilla/pdf.js/issues/1689
+var SYMBOLIC_FONT_GLYPH_OFFSET = 0xF100;
+// END WF
 
 // PDF Glyph Space Units are one Thousandth of a TextSpace Unit
 // except for Type 3 fonts
