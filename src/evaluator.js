@@ -586,7 +586,6 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
                       // We support the default so don't trigger the TODO.
                       if (!isName(value) || value.name != 'None') {
                         TODO('graphic state operator ' + key);
-                        console.log(PDFJS.wfDebug);
                         if (!PDFJS.wfDebug)
                             throw PDFJS.WFDrawException.SoftMask;
                       }
