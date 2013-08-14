@@ -14,10 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/* globals Ascii85Stream, AsciiHexStream, CCITTFaxStream, Cmd, Dict, error,
-           FlateStream, isArray, isCmd, isDict, isInt, isName, isNum, isRef,
-           isString, Jbig2Stream, JpegStream, JpxStream, LZWStream, Name,
-           NullStream, PredictorStream, Ref, RunLengthStream, warn */
 
 'use strict';
 
@@ -60,7 +56,7 @@ var Parser = (function ParserClosure() {
         this.shift();
         var array = [];
         while (!isCmd(this.buf1, ']') && !isEOF(this.buf1))
-          array.push(this.getObj(cipherTransform));
+          array.push(this.getObj());
         if (isEOF(this.buf1))
           error('End of file inside array');
         this.shift();
@@ -137,8 +133,7 @@ var Parser = (function ParserClosure() {
 
       // searching for the /EI\s/
       var state = 0, ch;
-      while (state != 4 &&
-             (ch = stream.getByte()) !== null && ch !== undefined) {
+      while (state != 4 && (ch = stream.getByte()) != null) {
         switch (ch) {
           case 0x20:
           case 0x0D:
@@ -360,7 +355,6 @@ var Lexer = (function LexerClosure() {
       do {
         ch = stream.getChar();
         switch (ch) {
-          case null:
           case undefined:
             warn('Unterminated string');
             done = true;
@@ -370,7 +364,7 @@ var Lexer = (function LexerClosure() {
             str += ch;
             break;
           case ')':
-            if (--numParen === 0) {
+            if (--numParen == 0) {
               done = true;
             } else {
               str += ch;
@@ -379,7 +373,6 @@ var Lexer = (function LexerClosure() {
           case '\\':
             ch = stream.getChar();
             switch (ch) {
-              case null:
               case undefined:
                 warn('Unterminated string');
                 done = true;
@@ -429,12 +422,10 @@ var Lexer = (function LexerClosure() {
                 break;
               default:
                 str += ch;
-                break;
             }
             break;
           default:
             str += ch;
-            break;
         }
       } while (!done);
       return str;
@@ -485,13 +476,13 @@ var Lexer = (function LexerClosure() {
           if (isFirstHex) {
             firstDigit = toHexDigit(ch);
             if (firstDigit === -1) {
-              warn('Ignoring invalid character "' + ch + '" in hex string');
+              warn("Ignoring invalid character '" + ch + "' in hex string");
               continue;
             }
           } else {
             secondDigit = toHexDigit(ch);
             if (secondDigit === -1) {
-              warn('Ignoring invalid character "' + ch + '" in hex string');
+              warn("Ignoring invalid character '" + ch + "' in hex string");
               continue;
             }
             str += String.fromCharCode((firstDigit << 4) | secondDigit);
@@ -549,7 +540,6 @@ var Lexer = (function LexerClosure() {
             stream.skip();
             return Cmd.get('>>');
           }
-          return Cmd.get(ch);
         case '{':
         case '}':
           return Cmd.get(ch);

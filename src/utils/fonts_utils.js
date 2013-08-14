@@ -14,10 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/* globals CFFDictDataMap, CFFDictPrivateDataMap, CFFEncodingMap, CFFStrings,
-           Components, Dict, dump, error, isNum, log, netscape, Stream, warn */
-
-'use strict';
 
 /*
  * The Type2 reader code below is only used for debugging purpose since Type2
@@ -37,7 +33,7 @@ function readCharset(aStream, aCharstrings) {
 
   var format = aStream.getByte();
   var count = aCharstrings.length - 1;
-  if (format === 0) {
+  if (format == 0) {
     charset['.notdef'] = readCharstringEncoding(aCharstrings[0]);
 
     for (var i = 1; i < count + 1; i++) {
@@ -371,7 +367,7 @@ var Type2Parser = function type2Parser(aFilePath) {
     // Read Charset
     dump('Read Charset for ' + charStrings.length + ' glyphs');
     var charsetEntry = font.get('charset');
-    if (charsetEntry === 0) {
+    if (charsetEntry == 0) {
       error('Need to support CFFISOAdobeCharset');
     } else if (charsetEntry == 1) {
       error('Need to support CFFExpert');

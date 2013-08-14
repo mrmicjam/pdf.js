@@ -14,10 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/* globals CanvasGraphics, combineUrl, createScratchCanvas, error, ErrorFont,
-           Font, FontLoader, globalScope, info, isArrayBuffer, loadJpegStream,
-           MessageHandler, PDFJS, PDFObjects, Promise, StatTimer, warn,
-           WorkerMessageHandler */
 
  'use strict';
 
@@ -117,16 +113,6 @@ var PDFDocumentProxy = (function PDFDocumentProxyClosure() {
       var promise = new PDFJS.Promise();
       var destinations = this.pdfInfo.destinations;
       promise.resolve(destinations);
-      return promise;
-    },
-    /**
-     * @return {Promise} A promise that is resolved with an array of all the
-     * JavaScript strings in the name tree.
-     */
-    getJavaScript: function PDFDocumentProxy_getDestinations() {
-      var promise = new PDFJS.Promise();
-      var js = this.pdfInfo.javaScript;
-      promise.resolve(js);
       return promise;
     },
     /**
@@ -257,8 +243,6 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
      *   canvasContext(required): A 2D context of a DOM Canvas object.,
      *   textLayer(optional): An object that has beginLayout, endLayout, and
      *                        appendText functions.,
-     *   imageLayer(optional): An object that has beginLayout, endLayout and
-     *                         appendImage functions.,
      *   continueCallback(optional): A function that will be called each time
      *                               the rendering is paused.  To continue
      *                               rendering call the function that is the
@@ -298,7 +282,7 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
           promise.reject(error);
         else
           promise.resolve();
-      }
+      };
       var continueCallback = params.continueCallback;
 
       // Once the operatorList and fonts are loaded, do the actual rendering.
@@ -310,7 +294,7 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
           }
 
           var gfx = new CanvasGraphics(params.canvasContext, this.commonObjs,
-            this.objs, params.textLayer, params.imageLayer);
+            this.objs, params.textLayer);
           try {
             this.display(gfx, params.viewport, complete, continueCallback);
           } catch (e) {
@@ -384,11 +368,11 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
       var stats = this.stats;
       stats.time('Rendering');
 
-      var operatorList = this.operatorList;
-      gfx.beginDrawing(viewport, operatorList.transparency);
+      gfx.beginDrawing(viewport);
 
       var startIdx = 0;
-      var length = operatorList.fnArray.length;
+      var length = this.operatorList.fnArray.length;
+      var operatorList = this.operatorList;
       var stepper = null;
       if (PDFJS.pdfBug && 'StepperManager' in globalScope &&
           globalScope['StepperManager'].enabled) {
@@ -399,7 +383,7 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
 
       var continueWrapper;
       if (continueCallback)
-        continueWrapper = function() { continueCallback(next); };
+        continueWrapper = function() { continueCallback(next); }
       else
         continueWrapper = next;
 
@@ -563,10 +547,6 @@ var WorkerTransport = (function WorkerTransportClosure() {
         this.workerReadyPromise.reject(data.exception.name, data.exception);
       }, this);
 
-      messageHandler.on('MissingPDF', function transportMissingPDF(data) {
-        this.workerReadyPromise.reject(data.exception.message, data.exception);
-      }, this);
-
       messageHandler.on('UnknownError', function transportUnknownError(data) {
         this.workerReadyPromise.reject(data.exception.message, data.exception);
       }, this);
@@ -681,8 +661,7 @@ var WorkerTransport = (function WorkerTransportClosure() {
           var size = width * height;
           var rgbaLength = size * 4;
           var buf = new Uint8Array(size * components);
-          // RAJ: (TODO) Need a context for use with createScratchCanvas
-          var tmpCanvas = createScratchCanvas(null, width, height);
+          var tmpCanvas = createScratchCanvas(width, height);
           var tmpCtx = tmpCanvas.getContext('2d');
           tmpCtx.drawImage(img, 0, 0);
           var data = tmpCtx.getImageData(0, 0, width, height).data;
