@@ -263,6 +263,15 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
         var softMask = dict.get('SMask', 'SM') || false;
         var mask = dict.get('Mask') || false;
 
+        // <WF>
+        // HYDRA-31: Our server-side port has issues rendering non-JPEG inline
+        // images.
+        if (inline && !(image instanceof JpegStream)) {
+          if (!PDFJS.wfDebug)
+            throw PDFJS.WFDrawException.InlineImage;
+        }
+        // </WF>
+
         var SMALL_IMAGE_DIMENSIONS = 200;
         // Inlining small images into the queue as RGB data
         if (inline && !softMask && !mask &&
@@ -1237,7 +1246,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
       if (type.name === 'Type3') {
         properties.coded = true;
       }
-      
+
       return new Font(fontName.name, fontFile, properties);
     }
   };
