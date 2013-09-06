@@ -564,13 +564,8 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
                       // We support the default so don't trigger the TODO.
                       if (!isName(value) || value.name != 'None') {
                         TODO('graphic state operator ' + key);
-                        /* This catches non-breaking mask operations.
-                         * So let's ignore these for now until we determine how
-                         * to isolate when these failed SMask's significantly
-                         * degrade the rendered page.
                         if (!PDFJS.wfDebug)
                             throw PDFJS.WFDrawException.SoftMask;
-                        */
                       }
                       break;
                     // Only generate info log messages for the following since
