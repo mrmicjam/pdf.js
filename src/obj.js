@@ -14,6 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/* globals assertWellFormed, bytesToString, CipherTransformFactory, error, info,
+           InvalidPDFException, isArray, isCmd, isDict, isInt, isName, isRef,
+           isStream, JpegStream, Lexer, log, Page, Parser, Promise, shadow,
+           stringToPDFString, stringToUTF8String, warn, isString */
 
 'use strict';
 
@@ -48,58 +52,67 @@ var Cmd = (function CmdClosure() {
 })();
 
 var Dict = (function DictClosure() {
+  var nonSerializable = function nonSerializableClosure() {
+    return nonSerializable; // creating closure on some variable
+  };
+
   // xref is optional
   function Dict(xref) {
     // Map should only be used internally, use functions below to access.
-    var map = Object.create(null);
+    this.map = Object.create(null);
+    this.xref = xref;
+    this.__nonSerializable__ = nonSerializable; // disable cloning of the Dict
+  }
 
-    this.assignXref = function Dict_assignXref(newXref) {
-      xref = newXref;
-    };
+  Dict.prototype = {
+    assignXref: function Dict_assignXref(newXref) {
+      this.xref = newXref;
+    },
 
     // automatically dereferences Ref objects
-    this.get = function Dict_get(key1, key2, key3) {
+    get: function Dict_get(key1, key2, key3) {
       var value;
-      if (typeof (value = map[key1]) != 'undefined' || key1 in map ||
+      var xref = this.xref;
+      if (typeof (value = this.map[key1]) != 'undefined' || key1 in this.map ||
           typeof key2 == 'undefined') {
         return xref ? xref.fetchIfRef(value) : value;
       }
-      if (typeof (value = map[key2]) != 'undefined' || key2 in map ||
+      if (typeof (value = this.map[key2]) != 'undefined' || key2 in this.map ||
           typeof key3 == 'undefined') {
         return xref ? xref.fetchIfRef(value) : value;
       }
-      value = map[key3] || null;
+      value = this.map[key3] || null;
       return xref ? xref.fetchIfRef(value) : value;
-    };
+    },
 
     // no dereferencing
-    this.getRaw = function Dict_getRaw(key) {
-      return map[key];
-    };
+    getRaw: function Dict_getRaw(key) {
+      return this.map[key];
+    },
 
     // creates new map and dereferences all Refs
-    this.getAll = function Dict_getAll() {
+    getAll: function Dict_getAll() {
       var all = {};
-      for (var key in map) {
+      for (var key in this.map) {
         var obj = this.get(key);
         all[key] = obj instanceof Dict ? obj.getAll() : obj;
       }
       return all;
-    };
+    },
 
-    this.set = function Dict_set(key, value) {
-      map[key] = value;
-    };
+    set: function Dict_set(key, value) {
+      this.map[key] = value;
+    },
 
-    this.has = function Dict_has(key) {
-      return key in map;
-    };
+    has: function Dict_has(key) {
+      return key in this.map;
+    },
 
-    this.forEach = function Dict_forEach(callback) {
-      for (var key in map) {
+    forEach: function Dict_forEach(callback) {
+      for (var key in this.map) {
         callback(key, this.get(key));
       }
-    };
+    }
   };
 
   return Dict;
@@ -288,33 +301,50 @@ var Catalog = (function CatalogClosure() {
         });
       }
       if (nameTreeRef) {
-        // reading name tree
-        var processed = new RefSet();
-        processed.put(nameTreeRef);
-        var queue = [nameTreeRef];
-        while (queue.length > 0) {
-          var i, n;
-          obj = xref.fetch(queue.shift());
-          if (obj.has('Kids')) {
-            var kids = obj.get('Kids');
-            for (i = 0, n = kids.length; i < n; i++) {
-              var kid = kids[i];
-              if (processed.has(kid))
-                error('invalid destinations');
-              queue.push(kid);
-              processed.put(kid);
-            }
+        var nameTree = new NameTree(nameTreeRef, xref);
+        var names = nameTree.getAll();
+        for (var name in names) {
+          if (!names.hasOwnProperty(name)) {
             continue;
           }
-          var names = obj.get('Names');
-          if (names) {
-            for (i = 0, n = names.length; i < n; i += 2) {
-              dests[names[i]] = fetchDestination(xref.fetchIfRef(names[i + 1]));
-            }
-          }
+          dests[name] = fetchDestination(names[name]);
         }
       }
       return shadow(this, 'destinations', dests);
+    },
+    get javaScript() {
+      var xref = this.xref;
+      var obj = this.catDict.get('Names');
+
+      var javaScript = [];
+      if (obj && obj.has('JavaScript')) {
+        var nameTree = new NameTree(obj.getRaw('JavaScript'), xref);
+        var names = nameTree.getAll();
+        for (var name in names) {
+          if (!names.hasOwnProperty(name)) {
+            continue;
+          }
+          // We don't really use the JavaScript right now so this code is
+          // defensive so we don't cause errors on document load.
+          var jsDict = names[name];
+          if (!isDict(jsDict)) {
+            continue;
+          }
+          var type = jsDict.get('S');
+          if (!isName(type) || type.name !== 'JavaScript') {
+            continue;
+          }
+          var js = jsDict.get('JS');
+          if (!isString(js) && !isStream(js)) {
+            continue;
+          }
+          if (isStream(js)) {
+            js = bytesToString(js.getBytes());
+          }
+          javaScript.push(stringToPDFString(js));
+        }
+      }
+      return shadow(this, 'javaScript', javaScript);
     },
     getPage: function Catalog_getPage(n) {
       var pageCache = this.pageCache;
@@ -442,7 +472,7 @@ var XRef = (function XRefClosure() {
           for (j = 0; j < typeFieldWidth; ++j)
             type = (type << 8) | stream.getByte();
           // if type field is absent, its default value = 1
-          if (typeFieldWidth == 0)
+          if (typeFieldWidth === 0)
             type = 1;
           for (j = 0; j < offsetFieldWidth; ++j)
             offset = (offset << 8) | stream.getByte();
@@ -678,7 +708,7 @@ var XRef = (function XRefClosure() {
         }
         if (!isCmd(obj3, 'obj')) {
           // some bad pdfs use "obj1234" and really mean 1234
-          if (obj3.cmd.indexOf('obj') == 0) {
+          if (obj3.cmd.indexOf('obj') === 0) {
             num = parseInt(obj3.cmd.substring(3), 10);
             if (!isNaN(num))
               return num;
@@ -749,6 +779,58 @@ var XRef = (function XRefClosure() {
   };
 
   return XRef;
+})();
+
+/**
+ * A NameTree is like a Dict but has some adventagous properties, see the spec
+ * (7.9.6) for more details.
+ * TODO: implement all the Dict functions and make this more efficent.
+ */
+var NameTree = (function NameTreeClosure() {
+  function NameTree(root, xref) {
+    this.root = root;
+    this.xref = xref;
+  }
+
+  NameTree.prototype = {
+    getAll: function NameTree_getAll() {
+      var dict = {};
+      if (!this.root) {
+        return dict;
+      }
+      var xref = this.xref;
+      // reading name tree
+      var processed = new RefSet();
+      processed.put(this.root);
+      var queue = [this.root];
+      while (queue.length > 0) {
+        var i, n;
+        var obj = xref.fetchIfRef(queue.shift());
+        if (!isDict(obj)) {
+          continue;
+        }
+        if (obj.has('Kids')) {
+          var kids = obj.get('Kids');
+          for (i = 0, n = kids.length; i < n; i++) {
+            var kid = kids[i];
+            if (processed.has(kid))
+              error('invalid destinations');
+            queue.push(kid);
+            processed.put(kid);
+          }
+          continue;
+        }
+        var names = obj.get('Names');
+        if (names) {
+          for (i = 0, n = names.length; i < n; i += 2) {
+            dict[names[i]] = xref.fetchIfRef(names[i + 1]);
+          }
+        }
+      }
+      return dict;
+    }
+  };
+  return NameTree;
 })();
 
 /**

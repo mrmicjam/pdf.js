@@ -14,6 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/* globals assert, assertWellFormed, ColorSpace, Dict, Encodings, error,
+           ErrorFont, Font, FONT_IDENTITY_MATRIX, fontCharsToUnicode, FontFlags,
+           IDENTITY_MATRIX, info, isArray, isCmd, isDict, isEOF, isName, isNum,
+           isStream, isString, JpegStream, Lexer, Metrics, Name, Parser,
+           Pattern, PDFImage, PDFJS, serifFonts, stdFontMap, symbolsFonts,
+           TilingPattern, TODO, warn, Util */
 
 'use strict';
 
@@ -30,101 +36,104 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
     this.fontIdCounter = 0;
   }
 
+  // Specifies properties for each command
+  //
+  // If variableArgs === true: [0, `numArgs`] expected
+  // If variableArgs === false: exactly `numArgs` expected
   var OP_MAP = {
-    // Graphics state
-    w: 'setLineWidth',
-    J: 'setLineCap',
-    j: 'setLineJoin',
-    M: 'setMiterLimit',
-    d: 'setDash',
-    ri: 'setRenderingIntent',
-    i: 'setFlatness',
-    gs: 'setGState',
-    q: 'save',
-    Q: 'restore',
-    cm: 'transform',
+    // Graphic state
+    w: { fnName: 'setLineWidth', numArgs: 1, variableArgs: false },
+    J: { fnName: 'setLineCap', numArgs: 1, variableArgs: false },
+    j: { fnName: 'setLineJoin', numArgs: 1, variableArgs: false },
+    M: { fnName: 'setMiterLimit', numArgs: 1, variableArgs: false },
+    d: { fnName: 'setDash', numArgs: 2, variableArgs: false },
+    ri: { fnName: 'setRenderingIntent', numArgs: 1, variableArgs: false },
+    i: { fnName: 'setFlatness', numArgs: 1, variableArgs: false },
+    gs: { fnName: 'setGState', numArgs: 1, variableArgs: false },
+    q: { fnName: 'save', numArgs: 0, variableArgs: false },
+    Q: { fnName: 'restore', numArgs: 0, variableArgs: false },
+    cm: { fnName: 'transform', numArgs: 6, variableArgs: false },
 
     // Path
-    m: 'moveTo',
-    l: 'lineTo',
-    c: 'curveTo',
-    v: 'curveTo2',
-    y: 'curveTo3',
-    h: 'closePath',
-    re: 'rectangle',
-    S: 'stroke',
-    s: 'closeStroke',
-    f: 'fill',
-    F: 'fill',
-    'f*': 'eoFill',
-    B: 'fillStroke',
-    'B*': 'eoFillStroke',
-    b: 'closeFillStroke',
-    'b*': 'closeEOFillStroke',
-    n: 'endPath',
+    m: { fnName: 'moveTo', numArgs: 2, variableArgs: false },
+    l: { fnName: 'lineTo', numArgs: 2, variableArgs: false },
+    c: { fnName: 'curveTo', numArgs: 6, variableArgs: false },
+    v: { fnName: 'curveTo2', numArgs: 4, variableArgs: false },
+    y: { fnName: 'curveTo3', numArgs: 4, variableArgs: false },
+    h: { fnName: 'closePath', numArgs: 0, variableArgs: false },
+    re: { fnName: 'rectangle', numArgs: 4, variableArgs: false },
+    S: { fnName: 'stroke', numArgs: 0, variableArgs: false },
+    s: { fnName: 'closeStroke', numArgs: 0, variableArgs: false },
+    f: { fnName: 'fill', numArgs: 0, variableArgs: false },
+    F: { fnName: 'fill', numArgs: 0, variableArgs: false },
+    'f*': { fnName: 'eoFill', numArgs: 0, variableArgs: false },
+    B: { fnName: 'fillStroke', numArgs: 0, variableArgs: false },
+    'B*': { fnName: 'eoFillStroke', numArgs: 0, variableArgs: false },
+    b: { fnName: 'closeFillStroke', numArgs: 0, variableArgs: false },
+    'b*': { fnName: 'closeEOFillStroke', numArgs: 0, variableArgs: false },
+    n: { fnName: 'endPath', numArgs: 0, variableArgs: false },
 
     // Clipping
-    W: 'clip',
-    'W*': 'eoClip',
+    W: { fnName: 'clip', numArgs: 0, variableArgs: false },
+    'W*': { fnName: 'eoClip', numArgs: 0, variableArgs: false },
 
     // Text
-    BT: 'beginText',
-    ET: 'endText',
-    Tc: 'setCharSpacing',
-    Tw: 'setWordSpacing',
-    Tz: 'setHScale',
-    TL: 'setLeading',
-    Tf: 'setFont',
-    Tr: 'setTextRenderingMode',
-    Ts: 'setTextRise',
-    Td: 'moveText',
-    TD: 'setLeadingMoveText',
-    Tm: 'setTextMatrix',
-    'T*': 'nextLine',
-    Tj: 'showText',
-    TJ: 'showSpacedText',
-    "'": 'nextLineShowText',
-    '"': 'nextLineSetSpacingShowText',
+    BT: { fnName: 'beginText', numArgs: 0, variableArgs: false },
+    ET: { fnName: 'endText', numArgs: 0, variableArgs: false },
+    Tc: { fnName: 'setCharSpacing', numArgs: 1, variableArgs: false },
+    Tw: { fnName: 'setWordSpacing', numArgs: 1, variableArgs: false },
+    Tz: { fnName: 'setHScale', numArgs: 1, variableArgs: false },
+    TL: { fnName: 'setLeading', numArgs: 1, variableArgs: false },
+    Tf: { fnName: 'setFont', numArgs: 2, variableArgs: false },
+    Tr: { fnName: 'setTextRenderingMode', numArgs: 1, variableArgs: false },
+    Ts: { fnName: 'setTextRise', numArgs: 1, variableArgs: false },
+    Td: { fnName: 'moveText', numArgs: 2, variableArgs: false },
+    TD: { fnName: 'setLeadingMoveText', numArgs: 2, variableArgs: false },
+    Tm: { fnName: 'setTextMatrix', numArgs: 6, variableArgs: false },
+    'T*': { fnName: 'nextLine', numArgs: 0, variableArgs: false },
+    Tj: { fnName: 'showText', numArgs: 1, variableArgs: false },
+    TJ: { fnName: 'showSpacedText', numArgs: 1, variableArgs: false },
+    '\'': { fnName: 'nextLineShowText', numArgs: 1, variableArgs: false },
+    '"': { fnName: 'nextLineSetSpacingShowText', numArgs: 3,
+      variableArgs: false },
 
     // Type3 fonts
-    d0: 'setCharWidth',
-    d1: 'setCharWidthAndBounds',
+    d0: { fnName: 'setCharWidth', numArgs: 2, variableArgs: false },
+    d1: { fnName: 'setCharWidthAndBounds', numArgs: 6, variableArgs: false },
 
     // Color
-    CS: 'setStrokeColorSpace',
-    cs: 'setFillColorSpace',
-    SC: 'setStrokeColor',
-    SCN: 'setStrokeColorN',
-    sc: 'setFillColor',
-    scn: 'setFillColorN',
-    G: 'setStrokeGray',
-    g: 'setFillGray',
-    RG: 'setStrokeRGBColor',
-    rg: 'setFillRGBColor',
-    K: 'setStrokeCMYKColor',
-    k: 'setFillCMYKColor',
+    CS: { fnName: 'setStrokeColorSpace', numArgs: 1, variableArgs: false },
+    cs: { fnName: 'setFillColorSpace', numArgs: 1, variableArgs: false },
+    SC: { fnName: 'setStrokeColor', numArgs: 4, variableArgs: true },
+    SCN: { fnName: 'setStrokeColorN', numArgs: 33, variableArgs: true },
+    sc: { fnName: 'setFillColor', numArgs: 4, variableArgs: true },
+    scn: { fnName: 'setFillColorN', numArgs: 33, variableArgs: true },
+    G: { fnName: 'setStrokeGray', numArgs: 1, variableArgs: false },
+    g: { fnName: 'setFillGray', numArgs: 1, variableArgs: false },
+    RG: { fnName: 'setStrokeRGBColor', numArgs: 3, variableArgs: false },
+    rg: { fnName: 'setFillRGBColor', numArgs: 3, variableArgs: false },
+    K: { fnName: 'setStrokeCMYKColor', numArgs: 4, variableArgs: false },
+    k: { fnName: 'setFillCMYKColor', numArgs: 4, variableArgs: false },
 
     // Shading
-    sh: 'shadingFill',
+    sh: { fnName: 'shadingFill', numArgs: 1, variableArgs: false },
 
     // Images
-    BI: 'beginInlineImage',
-    ID: 'beginImageData',
-    EI: 'endInlineImage',
+    BI: { fnName: 'beginInlineImage', numArgs: 0, variableArgs: false },
+    ID: { fnName: 'beginImageData', numArgs: 0, variableArgs: false },
+    EI: { fnName: 'endInlineImage', numArgs: 0, variableArgs: false },
 
     // XObjects
-    Do: 'paintXObject',
-
-    // Marked content
-    MP: 'markPoint',
-    DP: 'markPointProps',
-    BMC: 'beginMarkedContent',
-    BDC: 'beginMarkedContentProps',
-    EMC: 'endMarkedContent',
+    Do: { fnName: 'paintXObject', numArgs: 1, variableArgs: false },
+    MP: { fnName: 'markPoint', numArgs: 1, variableArgs: false },
+    DP: { fnName: 'markPointProps', numArgs: 2, variableArgs: false },
+    BMC: { fnName: 'beginMarkedContent', numArgs: 1, variableArgs: false },
+    BDC: { fnName: 'beginMarkedContentProps', numArgs: 2, variableArgs: false },
+    EMC: { fnName: 'endMarkedContent', numArgs: 0, variableArgs: false },
 
     // Compatibility
-    BX: 'beginCompat',
-    EX: 'endCompat',
+    BX: { fnName: 'beginCompat', numArgs: 0, variableArgs: false },
+    EX: { fnName: 'endCompat', numArgs: 0, variableArgs: false },
 
     // (reserved partial commands for the lexer)
     BM: null,
@@ -263,6 +272,15 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
         var softMask = dict.get('SMask', 'SM') || false;
         var mask = dict.get('Mask') || false;
 
+        // <WF>
+        // HYDRA-31: Our server-side port has issues rendering non-JPEG inline
+        // images.
+        if (inline && !(image instanceof JpegStream)) {
+          if (!PDFJS.wfDebug)
+            throw PDFJS.WFDrawException.InlineImage;
+        }
+        // </WF>
+
         var SMALL_IMAGE_DIMENSIONS = 200;
         // Inlining small images into the queue as RGB data
         if (inline && !softMask && !mask &&
@@ -302,7 +320,6 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
             } else {
                 // No conversion needed for natively supported jpeg rgb.
                 imageData.path = PDFJS.saveImage(image.bytes, w, h, 'jpg');
-                image.bytes = [];
                 handler.send('obj',
                              [objId, pageIndex, 'JpegStream', imageData]);
             }
@@ -310,6 +327,9 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
             if (!softMask && !mask) {
                 // no softMask or mask, so we use the jpeg as-is
                 return;
+            } else {
+                if (!PDFJS.wfDebug)
+                    throw PDFJS.WFDrawException.SoftMask;
             }
         } else {
             fn = 'paintImageXObject';
@@ -332,8 +352,11 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
         // END WF
       }
 
-      if (!queue)
-        queue = {};
+      if (!queue) {
+        queue = {
+          transparency: false
+        };
+      }
 
       if (!queue.argsArray) {
         queue.argsArray = [];
@@ -348,6 +371,8 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
       resources = resources || new Dict();
       var xobjs = resources.get('XObject') || new Dict();
       var patterns = resources.get('Pattern') || new Dict();
+      // TODO(mduan): pass array of knownCommands rather than OP_MAP
+      // dictionary
       var parser = new Parser(new Lexer(stream, OP_MAP), false, xref);
       var res = resources;
       var args = [], obj;
@@ -355,13 +380,42 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
 
       while (true) {
         obj = parser.getObj();
-        if (isEOF(obj))
+        if (isEOF(obj)) {
           break;
+        }
 
         if (isCmd(obj)) {
           var cmd = obj.cmd;
-          var fn = OP_MAP[cmd];
-          assertWellFormed(fn, 'Unknown command "' + cmd + '"');
+
+          // Check that the command is valid
+          var opSpec = OP_MAP[cmd];
+          if (!opSpec) {
+            warn('Unknown command "' + cmd + '"');
+            continue;
+          }
+
+          var fn = opSpec.fnName;
+
+          // Validate the number of arguments for the command
+          if (opSpec.variableArgs) {
+            if (args.length > opSpec.numArgs) {
+              info('Command ' + fn + ': expected [0,' + opSpec.numArgs +
+                  '] args, but received ' + args.length + ' args');
+            }
+          } else {
+            if (args.length < opSpec.numArgs) {
+              // If we receive too few args, it's not possible to possible
+              // to execute the command, so skip the command
+              info('Command ' + fn + ': because expected ' + opSpec.numArgs +
+                  ' args, but received ' + args.length + ' args; skipping');
+              args = [];
+              continue;
+            } else if (args.length > opSpec.numArgs) {
+              info('Command ' + fn + ': expected ' + opSpec.numArgs +
+                  ' args, but received ' + args.length + ' args');
+            }
+          }
+
           // TODO figure out how to type-check vararg functions
 
           if ((cmd == 'SCN' || cmd == 'scn') && !args[args.length - 1].code) {
@@ -501,14 +555,23 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
                       ]);
                       break;
                     case 'BM':
-                      // We support the default so don't trigger the TODO.
-                      if (!isName(value) || value.name != 'Normal')
-                        TODO('graphic state operator ' + key);
+                      if (!isName(value) || value.name !== 'Normal') {
+                        queue.transparency = true;
+                      }
+                      gsStateObj.push([key, value]);
                       break;
                     case 'SMask':
                       // We support the default so don't trigger the TODO.
-                      if (!isName(value) || value.name != 'None')
+                      if (!isName(value) || value.name != 'None') {
                         TODO('graphic state operator ' + key);
+                        /* This catches non-breaking mask operations.
+                         * So let's ignore these for now until we determine how
+                         * to isolate when these failed SMask's significantly
+                         * degrade the rendered page.
+                        if (!PDFJS.wfDebug)
+                            throw PDFJS.WFDrawException.SoftMask;
+                        */
+                      }
                       break;
                     // Only generate info log messages for the following since
                     // they are unlikey to have a big impact on the rendering.
@@ -542,13 +605,80 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
           fnArray.push(fn);
           argsArray.push(args);
           args = [];
-        } else if (obj != null) {
-          assertWellFormed(args.length <= 33, 'Too many arguments');
+        } else if (obj !== null && obj !== undefined) {
           args.push(obj instanceof Dict ? obj.getAll() : obj);
+          assertWellFormed(args.length <= 33, 'Too many arguments');
         }
       }
 
       return queue;
+    },
+
+    getAnnotationsOperatorList:
+        function PartialEvaluator_getAnnotationsOperatorList(annotations,
+                                                             dependency) {
+      // 12.5.5: Algorithm: Appearance streams
+      function getTransformMatrix(rect, bbox, matrix) {
+        var bounds = Util.getAxialAlignedBoundingBox(bbox, matrix);
+        var minX = bounds[0];
+        var minY = bounds[1];
+        var maxX = bounds[2];
+        var maxY = bounds[3];
+        var width = rect[2] - rect[0];
+        var height = rect[3] - rect[1];
+        var xRatio = width / (maxX - minX);
+        var yRatio = height / (maxY - minY);
+        return [
+          xRatio,
+          0,
+          0,
+          yRatio,
+          rect[0] - minX * xRatio,
+          rect[1] - minY * yRatio
+        ];
+      }
+
+      var fnArray = [];
+      var argsArray = [];
+      // deal with annotations
+      for (var i = 0, length = annotations.length; i < length; ++i) {
+        var annotation = annotations[i];
+
+        // check whether we can visualize annotation
+        if (!annotation ||
+            !annotation.annotationFlags ||
+            (annotation.annotationFlags & 0x0022) || // Hidden or NoView
+            !annotation.rect ||                      // rectangle is nessessary
+            !annotation.appearance) {                // appearance is nessessary
+          continue;
+        }
+
+        // apply rectangle
+        var rect = annotation.rect;
+        var bbox = annotation.bbox;
+        var matrix = annotation.matrix;
+        var transform = getTransformMatrix(rect, bbox, matrix);
+        var border = annotation.border;
+
+        fnArray.push('beginAnnotation');
+        argsArray.push([rect, transform, matrix, border]);
+
+        if (annotation.appearance) {
+          var list = this.getOperatorList(annotation.appearance,
+            annotation.resources, dependency);
+
+          Util.concatenateToArray(fnArray, list.fnArray);
+          Util.concatenateToArray(argsArray, list.argsArray);
+        }
+
+        fnArray.push('endAnnotation');
+        argsArray.push([]);
+      }
+
+      return {
+        fnArray: fnArray,
+        argsArray: argsArray
+      };
     },
 
     optimizeQueue: function PartialEvaluator_optimizeQueue(queue) {
@@ -728,7 +858,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
             case 'Tj':
               chunk += fontCharsToUnicode(args[0], font);
               break;
-            case "'":
+            case '\'':
               // For search, adding a extra white space for line breaks would be
               // better here, but that causes too much spaces in the
               // text-selection divs.
@@ -790,13 +920,14 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
           } // switch
 
           if (chunk !== '') {
-            bidiTexts.push(PDFJS.bidi(chunk, -1));
+            var bidiText = PDFJS.bidi(chunk, -1, font.vertical);
+            bidiTexts.push(bidiText);
 
             chunk = '';
           }
 
           args = [];
-        } else if (obj != null) {
+        } else if (obj !== null && obj !== undefined) {
           assertWellFormed(args.length <= 33, 'Too many arguments');
           args.push(obj);
         }
@@ -824,10 +955,6 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
             supplement: cidSystemInfo.get('Supplement')
           };
         }
-
-        var cidEncoding = baseDict.get('Encoding');
-        if (isName(cidEncoding))
-          properties.cidEncoding = cidEncoding.name;
 
         var cidToGidMap = dict.get('CIDToGIDMap');
         if (isStream(cidToGidMap))
@@ -1010,7 +1137,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
       var result = [];
       for (var j = 0, jj = glyphsData.length; j < jj; j++) {
         var glyphID = (glyphsData[j++] << 8) | glyphsData[j];
-        if (glyphID == 0)
+        if (glyphID === 0)
           continue;
 
         var code = j >> 1;
@@ -1025,25 +1152,43 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
                                                    properties) {
       var glyphsWidths = [];
       var defaultWidth = 0;
+      var glyphsVMetrics = [];
+      var defaultVMetrics;
       if (properties.composite) {
         defaultWidth = dict.get('DW') || 1000;
 
         var widths = dict.get('W');
         if (widths) {
-          var start = 0, end = 0;
           for (var i = 0, ii = widths.length; i < ii; i++) {
+            var start = widths[i++];
             var code = xref.fetchIfRef(widths[i]);
             if (isArray(code)) {
               for (var j = 0, jj = code.length; j < jj; j++)
                 glyphsWidths[start++] = code[j];
-              start = 0;
-            } else if (start) {
+            } else {
               var width = widths[++i];
               for (var j = start; j <= code; j++)
                 glyphsWidths[j] = width;
-              start = 0;
-            } else {
-              start = code;
+            }
+          }
+        }
+
+        if (properties.vertical) {
+          var vmetrics = dict.get('DW2') || [880, -1000];
+          defaultVMetrics = [vmetrics[1], defaultWidth * 0.5, vmetrics[0]];
+          vmetrics = dict.get('W2');
+          if (vmetrics) {
+            for (var i = 0, ii = vmetrics.length; i < ii; i++) {
+              var start = vmetrics[i++];
+              var code = xref.fetchIfRef(vmetrics[i]);
+              if (isArray(code)) {
+                for (var j = 0, jj = code.length; j < jj; j++)
+                  glyphsVMetrics[start++] = [code[j++], code[j++], code[j]];
+              } else {
+                var vmetric = [vmetrics[++i], vmetrics[++i], vmetrics[++i]];
+                for (var j = start; j <= code; j++)
+                  glyphsVMetrics[j] = vmetric;
+              }
             }
           }
         }
@@ -1087,11 +1232,34 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
 
       properties.defaultWidth = defaultWidth;
       properties.widths = glyphsWidths;
+      properties.defaultVMetrics = defaultVMetrics;
+      properties.vmetrics = glyphsVMetrics;
+    },
+
+    isSerifFont: function PartialEvaluator_isSerifFont(baseFontName) {
+
+      // Simulating descriptor flags attribute
+      var fontNameWoStyle = baseFontName.split('-')[0];
+      return (fontNameWoStyle in serifFonts) ||
+          (fontNameWoStyle.search(/serif/gi) !== -1);
     },
 
     getBaseFontMetrics: function PartialEvaluator_getBaseFontMetrics(name) {
       var defaultWidth = 0, widths = [], monospace = false;
-      var glyphWidths = Metrics[stdFontMap[name] || name];
+
+      var lookupName = stdFontMap[name] || name;
+
+      if (!(lookupName in Metrics)) {
+        // Use default fonts for looking up font metrics if the passed
+        // font is not a base font
+        if (this.isSerifFont(name)) {
+          lookupName = 'Times-Roman';
+        } else {
+          lookupName = 'Helvetica';
+        }
+      }
+      var glyphWidths = Metrics[lookupName];
+
       if (isNum(glyphWidths)) {
         defaultWidth = glyphWidths;
         monospace = true;
@@ -1153,8 +1321,8 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
 
           // Simulating descriptor flags attribute
           var fontNameWoStyle = baseFontName.split('-')[0];
-          var flags = (serifFonts[fontNameWoStyle] ||
-            (fontNameWoStyle.search(/serif/gi) != -1) ? FontFlags.Serif : 0) |
+          var flags = (
+            this.isSerifFont(fontNameWoStyle) ? FontFlags.Serif : 0) |
             (metrics.monospace ? FontFlags.FixedPitch : 0) |
             (symbolsFonts[fontNameWoStyle] ? FontFlags.Symbolic :
             FontFlags.Nonsymbolic);
@@ -1180,10 +1348,28 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
       // a variant.
       var firstChar = dict.get('FirstChar') || 0;
       var lastChar = dict.get('LastChar') || maxCharIndex;
+
       var fontName = descriptor.get('FontName');
+      var baseFont = dict.get('BaseFont');
       // Some bad pdf's have a string as the font name.
-      if (isString(fontName))
+      if (isString(fontName)) {
         fontName = new Name(fontName);
+      }
+      if (isString(baseFont)) {
+        baseFont = new Name(baseFont);
+      }
+
+      if (type.name !== 'Type3') {
+        var fontNameStr = fontName && fontName.name;
+        var baseFontStr = baseFont && baseFont.name;
+        if (fontNameStr !== baseFontStr) {
+          warn('The FontDescriptor\'s FontName is "' + fontNameStr +
+               '" but should be the same as the Font\'s BaseFont "' +
+               baseFontStr + '"');
+        }
+      }
+      fontName = fontName || baseFont;
+
       assertWellFormed(isName(fontName), 'invalid font name');
 
       var fontFile = descriptor.get('FontFile', 'FontFile2', 'FontFile3');
@@ -1221,13 +1407,21 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
         italicAngle: descriptor.get('ItalicAngle'),
         coded: false
       };
+
+      if (composite) {
+        var cidEncoding = baseDict.get('Encoding');
+        if (isName(cidEncoding)) {
+          properties.cidEncoding = cidEncoding.name;
+          properties.vertical = /-V$/.test(cidEncoding.name);
+        }
+      }
       this.extractWidths(dict, xref, descriptor, properties);
       this.extractDataStructures(dict, baseDict, xref, properties);
 
       if (type.name === 'Type3') {
         properties.coded = true;
       }
-      
+
       return new Font(fontName.name, fontFile, properties);
     }
   };
