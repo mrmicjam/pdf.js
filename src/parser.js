@@ -259,6 +259,7 @@ var Parser = (function ParserClosure() {
         return new AsciiHexStream(stream);
       }
       if (name == 'CCITTFaxDecode' || name == 'CCF') {
+        throw PDFJS.WFDrawException.FaxImage;
         return new CCITTFaxStream(stream, params);
       }
       if (name == 'RunLengthDecode' || name == 'RL') {

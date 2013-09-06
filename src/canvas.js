@@ -1059,6 +1059,25 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
               scaledAccentX = scaledX + accent.offset.x / fontSizeScale;
               scaledAccentY = scaledY - accent.offset.y / fontSizeScale;
             }
+            // WF ----- TEXT METRICS
+            // TODO: add scaling support
+            // TODO: add accents support
+            // TODO: add ascent and descent support
+            // only create metrics if the flag is set
+            if (PDFJS.CREATE_METRICS) {
+              var textMetricChar = character;
+              if (!textMetricChar && accent) {
+                textMetricChar = accent.fontChar;
+              }
+              PDFJS.textMetrics.addCharAtPos(
+                textMetricChar,
+                ctx._transformMatrix[4] + scaledX,
+                ctx._transformMatrix[5] + scaledY,
+                current.fontSize/current.fontScale || ctx.font
+              );
+            }
+
+            // END WF
             switch (textRenderingMode) {
               default: // other unsupported rendering modes
               case TextRenderingMode.FILL:
@@ -1089,6 +1108,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
                 break;
             }
             if (textRenderingMode & TextRenderingMode.ADD_TO_PATH_FLAG) {
+              throw PDFJS.WFDrawException.TextRenderToPath;
               var clipCtx = this.getCurrentTextClipping();
               clipCtx.fillText(character, scaledX, scaledY);
               if (accent) {
@@ -1229,6 +1249,10 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     },
     getColorN_Pattern: function CanvasGraphics_getColorN_Pattern(IR, cs) {
       if (IR[0] == 'TilingPattern') {
+
+        // WF - add an exception until we figure this out
+        throw PDFJS.WFDrawException.TilingPattern;
+
         var args = IR[1];
         var base = cs.base;
         var color;
