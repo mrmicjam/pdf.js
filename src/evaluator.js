@@ -635,6 +635,16 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
 
       var fnArray = [];
       var argsArray = [];
+
+      // WF - disable pdf Annotations drawing
+      if (!PDFJS.DRAW_PDF_ANNOTATIONS) {
+        return {
+          fnArray: fnArray,
+          argsArray: argsArray
+        };
+      }
+      // END WF
+
       // deal with annotations
       for (var i = 0, length = annotations.length; i < length; ++i) {
         var annotation = annotations[i];
