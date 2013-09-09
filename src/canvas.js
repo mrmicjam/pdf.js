@@ -1546,7 +1546,12 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var tmpCanvas = createScratchCanvas(ctx, width, height);
       var tmpCtx = tmpCanvas.getContext('2d');
 
-      // WF save buffer as image
+      // WF
+      // If the image is a buffer, save/convert it to file.
+      //
+      // When image.path is undefined, we are operating on a temp canvas in
+      // memory. We need to save this as a file so that it is available for the
+      // temp canvas operations client-side.
       //TODO('Support drawing paintInlineImages');
       if (imgData.path === undefined) {
         imgData.path = PDFJS.saveImage(imgData.data, width, height, 'png');
