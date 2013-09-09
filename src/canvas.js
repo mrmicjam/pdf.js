@@ -1525,6 +1525,15 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var heightScale = Math.max(Math.abs(currentTransform[3]), 1);
       var tmpCanvas = createScratchCanvas(ctx, width, height);
       var tmpCtx = tmpCanvas.getContext('2d');
+
+      // WF
+      // If the image is a buffer, save/convert it to file.
+      //TODO('Support drawing paintInlineImages');
+      if (imgData.path === undefined) {
+        imgData.path = PDFJS.saveImage(imgData.data, width, height, 'png');
+      }
+      // END WF
+
       //TODO: See if we can get PDF.js to have a flag to turn off this
       /*
       if (widthScale > 2 || heightScale > 2) {
