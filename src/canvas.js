@@ -1419,6 +1419,26 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       } while (this.current.paintFormXObjectDepth >= depth);
     },
 
+    beginAnnotation: function CanvasGraphics_beginAnnotation(rect, transform,
+                                                             matrix) {
+      this.save();
+
+      if (rect && isArray(rect) && 4 == rect.length) {
+        var width = rect[2] - rect[0];
+        var height = rect[3] - rect[1];
+        this.rectangle(rect[0], rect[1], width, height);
+        this.clip();
+        this.endPath();
+      }
+
+      this.transform.apply(this, transform);
+      this.transform.apply(this, matrix);
+    },
+
+    endAnnotation: function CanvasGraphics_endAnnotation() {
+      this.restore();
+    },
+
     paintJpegXObject: function CanvasGraphics_paintJpegXObject(objId, w, h) {
       var domImage = this.objs.get(objId);
       if (!domImage) {
@@ -1525,6 +1545,14 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var heightScale = Math.max(Math.abs(currentTransform[3]), 1);
       var tmpCanvas = createScratchCanvas(ctx, width, height);
       var tmpCtx = tmpCanvas.getContext('2d');
+
+      // WF save buffer as image
+      //TODO('Support drawing paintInlineImages');
+      if (imgData.path === undefined) {
+        imgData.path = PDFJS.saveImage(imgData.data, width, height, 'png');
+      }
+      // END WF
+
       //TODO: See if we can get PDF.js to have a flag to turn off this
       /*
       if (widthScale > 2 || heightScale > 2) {
