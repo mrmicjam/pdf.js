@@ -14,7 +14,7 @@
   },
   "devDependencies": {},
   "scripts": {
-    "test": "node make generic"
+    "install": "node make generic"
   },
   "repository": "",
   "author": "",
