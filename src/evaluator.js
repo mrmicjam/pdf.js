@@ -272,14 +272,11 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
         var softMask = dict.get('SMask', 'SM') || false;
         var mask = dict.get('Mask') || false;
 
-        // <WF>
         // HYDRA-31: Our server-side port has issues rendering non-JPEG inline
         // images.
         if (inline && !(image instanceof JpegStream)) {
-          if (!PDFJS.wfDebug)
-            throw PDFJS.WFDrawException.InlineImage;
+          PDFJS.errorHandler.addError('InlineImage'); // WF
         }
-        // </WF>
 
         var SMALL_IMAGE_DIMENSIONS = 200;
         // Inlining small images into the queue as RGB data
@@ -328,8 +325,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
                 // no softMask or mask, so we use the jpeg as-is
                 return;
             } else {
-                if (!PDFJS.wfDebug)
-                    throw PDFJS.WFDrawException.SoftMask;
+                PDFJS.errorHandler.addError('SoftMask'); // WF
             }
         } else {
             fn = 'paintImageXObject';
@@ -564,8 +560,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
                       // We support the default so don't trigger the TODO.
                       if (!isName(value) || value.name != 'None') {
                         TODO('graphic state operator ' + key);
-                        if (!PDFJS.wfDebug)
-                            throw PDFJS.WFDrawException.SoftMask;
+                        PDFJS.errorHandler.addError('SoftMask'); // WF
                       }
                       break;
                     // Only generate info log messages for the following since
