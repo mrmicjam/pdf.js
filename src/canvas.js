@@ -1076,7 +1076,6 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
                 current.fontSize/current.fontScale || ctx.font
               );
             }
-
             // END WF
             switch (textRenderingMode) {
               default: // other unsupported rendering modes
@@ -1108,7 +1107,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
                 break;
             }
             if (textRenderingMode & TextRenderingMode.ADD_TO_PATH_FLAG) {
-              throw PDFJS.WFDrawException.TextRenderToPath;
+              PDFJS.errorHandler.addError('TextRenderToPath'); // WF
               var clipCtx = this.getCurrentTextClipping();
               clipCtx.fillText(character, scaledX, scaledY);
               if (accent) {
@@ -1250,8 +1249,8 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     getColorN_Pattern: function CanvasGraphics_getColorN_Pattern(IR, cs) {
       if (IR[0] == 'TilingPattern') {
 
-        // WF - add an exception until we figure this out
-        throw PDFJS.WFDrawException.TilingPattern;
+        // WF: Use the image fallback until we figure this out
+        PDFJS.errorHandler.addError('TilingPattern'); // WF
 
         var args = IR[1];
         var base = cs.base;

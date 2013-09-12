@@ -26,7 +26,8 @@ var globalScope = (typeof window === 'undefined') ? this : window;
 var isWorker = (typeof window == 'undefined');
 
 var ERRORS = 0, WARNINGS = 1, INFOS = 5;
-var verbosity = WARNINGS;
+// WF: We can turn off "TODO" comments by setting this to "ERRORS".
+var verbosity = ERRORS;// WARNINGS
 
 // The global PDFJS object exposes the API
 // In production, it will be declared outside a global wrapper
