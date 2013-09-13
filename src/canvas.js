@@ -1071,9 +1071,9 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
               }
               PDFJS.textMetrics.addCharAtPos(
                 textMetricChar,
-                ctx._transformMatrix[4] + scaledX,
-                ctx._transformMatrix[5] + scaledY,
-                current.fontSize/current.fontScale || ctx.font
+                ctx._transformMatrix[4] + scaledX*scale,
+                ctx._transformMatrix[5] + scaledY*scale,
+                current.fontSize/current.fontSizeScale*scale || ctx.font
               );
             }
             // END WF
