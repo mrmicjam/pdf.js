@@ -1064,7 +1064,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
             // TODO: add accents support
             // TODO: add ascent and descent support
             // only create metrics if the flag is set
-            if (PDFJS.CREATE_METRICS || PDFJS.GENERATE_METRICS) {
+            if (PDFJS.VIEWER_METRICS || PDFJS.PDF_METRICS) {
               var textMetricChar = character;
               if (!textMetricChar && accent) {
                 textMetricChar = accent.fontChar;
