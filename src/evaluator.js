@@ -552,6 +552,9 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
                       break;
                     case 'BM':
                       if (!isName(value) || value.name !== 'Normal') {
+                        if (value.name !== 'Normal') {
+                          PDFJS.errorHandler.addError('Enhanced BlendMode'); // WF
+                        }
                         queue.transparency = true;
                       }
                       gsStateObj.push([key, value]);
