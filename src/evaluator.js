@@ -251,7 +251,6 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
 
         var imageMask = dict.get('ImageMask', 'IM') || false;
         if (imageMask) {
-          PDFJS.errorHandler.addError('ImageMask'); // WF
           // This depends on a tmpCanvas beeing filled with the
           // current fillStyle, such that processing the pixel
           // data can't be done here. Instead of creating a
@@ -766,6 +765,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
         }
       }
       // grouping paintImageMaskXObject's into paintImageMaskXObjectGroup
+      console.log("grouping paintImageMaskXObject's into paintImageMaskXObjectGroup");
       // searching for (save, transform, paintImageMaskXObject, restore)+
       var MIN_IMAGES_IN_MASKS_BLOCK = 10;
       var MAX_IMAGES_IN_MASKS_BLOCK = 100;

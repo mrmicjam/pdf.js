@@ -233,6 +233,8 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
   }
 
   function applyStencilMask(imgArray, width, height, inverseDecode, buffer) {
+      console.log('applyStencilMask');
+      console.log(imgArray.length, width, height, inverseDecode, buffer);
     var imgArrayPos = 0;
     var i, j, mask, buf;
     // removing making non-masked pixels transparent
@@ -1468,6 +1470,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
     paintImageMaskXObject: function CanvasGraphics_paintImageMaskXObject(
                              imgArray, inverseDecode, width, height) {
+      console.log('paintImageMaskXObject');
       var ctx = this.ctx;
       var tmpCanvas = createScratchCanvas(ctx, width, height);
       var tmpCtx = tmpCanvas.getContext('2d');
@@ -1482,12 +1485,15 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var pixels = imgData.data;
 
       applyStencilMask(imgArray, width, height, inverseDecode, pixels);
+      PDFJS.applyStencilMask(imgArray, width, height, inverseDecode, pixels);
 
-      this.paintInlineImageXObject(imgData);
+      imgData.stencilMask = true;
+      this.paintInlineImageXObject(imgData, tmpCanvas);
     },
 
     paintImageMaskXObjectGroup:
       function CanvasGraphics_paintImageMaskXObjectGroup(images) {
+      console.log('paintImageMaskXObjectGroup');
       var ctx = this.ctx;
       var tmpCanvasWidth = 0, tmpCanvasHeight = 0, tmpCanvas, tmpCtx;
       for (var i = 0, ii = images.length; i < ii; i++) {
@@ -1511,14 +1517,20 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
         applyStencilMask(image.data, w, h, image.inverseDecode, pixels);
 
-        tmpCtx.putImageData(imgData, 0, 0);
+        PDFJS.applyStencilMask(image.data, w, h, image.inverseDecode, pixels);
+        imgData.stencilMask = true;
 
+        this.paintInlineImageXObject(imgData, tmpCanvas);
+        //tmpCtx.putImageData(imgData, 0, 0);
+
+        /*
         ctx.save();
         ctx.transform.apply(ctx, image.transform);
         ctx.scale(1, -1);
         ctx.drawImage(tmpCanvas, 0, 0, w, h,
                       0, -1, 1, 1);
         ctx.restore();
+        */
       }
     },
 
@@ -1531,7 +1543,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     },
 
     paintInlineImageXObject:
-      function CanvasGraphics_paintInlineImageXObject(imgData) {
+      function CanvasGraphics_paintInlineImageXObject(imgData, tmpCanvas) {
       var width = imgData.width;
       var height = imgData.height;
       var ctx = this.ctx;
@@ -1542,8 +1554,19 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var currentTransform = ctx.mozCurrentTransformInverse;
       var widthScale = Math.max(Math.abs(currentTransform[0]), 1);
       var heightScale = Math.max(Math.abs(currentTransform[3]), 1);
-      var tmpCanvas = createScratchCanvas(ctx, width, height);
-      var tmpCtx = tmpCanvas.getContext('2d');
+      var tmpCtx;
+      if (tmpCanvas === undefined) {
+        tmpCanvas = createScratchCanvas(ctx, width, height);
+      }
+      tmpCtx = tmpCanvas.getContext('2d');
+
+      if (imgData.stencilMask !== undefined) {
+        console.log('stencilMask');
+        tmpCtx.putImageData(imgData.name, 0, 0);
+        ctx.drawImage(tmpCanvas, 0, -height);
+        this.restore();
+        return;
+      }
 
       // WF
       // If the image is a buffer, save/convert it to file.
