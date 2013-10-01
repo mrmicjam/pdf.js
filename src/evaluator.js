@@ -553,9 +553,13 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
                       break;
                     case 'BM':
                       if (!isName(value) || value.name !== 'Normal') {
-                        if (value.name !== 'Normal') {
-                          PDFJS.errorHandler.addError('Enhanced BlendMode'); // WF
+                        // WF
+                        // only normal is possible with current html5 canvas
+                        if (value.name !== 'Normal' &&
+                            value.name !== 'Compatible') {
+                          PDFJS.errorHandler.addError('Enhanced BlendMode');
                         }
+                        // END WF
                         queue.transparency = true;
                       }
                       gsStateObj.push([key, value]);
