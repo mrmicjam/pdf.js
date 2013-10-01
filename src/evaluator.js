@@ -251,6 +251,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
 
         var imageMask = dict.get('ImageMask', 'IM') || false;
         if (imageMask) {
+          PDFJS.errorHandler.addError('ImageMask'); // WF
           // This depends on a tmpCanvas beeing filled with the
           // current fillStyle, such that processing the pixel
           // data can't be done here. Instead of creating a
