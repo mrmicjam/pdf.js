@@ -1026,6 +1026,18 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         ctx.lineWidth = lineWidth;
 
         var x = 0;
+        // <WF>
+        var wfA2 = ctx._transformMatrix[0];
+        var wfB2 = ctx._transformMatrix[1];
+        var wfC2 = ctx._transformMatrix[2];
+        var wfD2 = ctx._transformMatrix[3];
+        var wfTx = ctx._transformMatrix[4];
+        var wfTy = ctx._transformMatrix[5];
+        var wfScaleX = Math.sqrt((wfA2 * wfA2) + (wfB2 * wfB2));
+        var wfScaleY = Math.sqrt((wfD2 * wfD2) + (wfC2 * wfC2));
+        var wfHeight = fontSize / fontSizeScale;
+        // </WF>
+
         for (var i = 0; i < glyphsLength; ++i) {
           var glyph = glyphs[i];
           if (glyph === null) {
@@ -1060,21 +1072,20 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
               scaledAccentY = scaledY - accent.offset.y / fontSizeScale;
             }
             // WF ----- TEXT METRICS
-            // TODO: add scaling support
             // TODO: add accents support
             // TODO: add ascent and descent support
             // only create metrics if the flag is set
             if (PDFJS.VIEWER_METRICS || PDFJS.PDF_METRICS) {
-              var textMetricChar = character;
-              if (!textMetricChar && accent) {
-                textMetricChar = accent.fontChar;
+              var wfChar = character;
+              if (!wfChar && accent) {
+                wfChar = accent.fontChar;
               }
               PDFJS.textMetrics.addCharAtPos(
-                textMetricChar,
-                ctx._transformMatrix[4] + scaledX*scale,
-                ctx._transformMatrix[5] + scaledY*scale,
-                current.fontSize/current.fontSizeScale*scale || ctx.font
-              );
+                wfChar,
+                wfTx + (scaledX * wfScaleX),
+                wfTy + (scaledY * wfScaleY),
+                (charWidth * wfScaleX),
+                ((wfHeight * wfScaleY) || ctx.font));
             }
             // END WF
             switch (textRenderingMode) {
