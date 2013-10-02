@@ -1027,12 +1027,12 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
         var x = 0;
         // <WF>
-        var wfA2 = ctx._transformMatrix[0];
-        var wfB2 = ctx._transformMatrix[1];
-        var wfC2 = ctx._transformMatrix[2];
-        var wfD2 = ctx._transformMatrix[3];
-        var wfTx = ctx._transformMatrix[4];
-        var wfTy = ctx._transformMatrix[5];
+        var wfA2 = ctx._transformMatrix[0] || 1;
+        var wfB2 = ctx._transformMatrix[1] || 0;
+        var wfC2 = ctx._transformMatrix[2] || 0;
+        var wfD2 = ctx._transformMatrix[3] || 1;
+        var wfTx = ctx._transformMatrix[4] || 0;
+        var wfTy = ctx._transformMatrix[5] || 0;
         var wfScaleX = Math.sqrt((wfA2 * wfA2) + (wfB2 * wfB2));
         var wfScaleY = Math.sqrt((wfD2 * wfD2) + (wfC2 * wfC2));
         var wfHeight = fontSize / fontSizeScale;
