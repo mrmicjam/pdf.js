@@ -1084,7 +1084,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
                 wfChar,
                 wfTx + (scaledX * wfScaleX),
                 wfTy + (scaledY * wfScaleY),
-                (charWidth * wfScaleX),
+                Math.abs(charWidth * wfScaleX),
                 ((wfHeight * wfScaleY) || ctx.font));
             }
             // END WF
