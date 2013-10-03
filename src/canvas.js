@@ -1025,19 +1025,26 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
         ctx.lineWidth = lineWidth;
 
-        var x = 0;
         // <WF>
-        var wfA2 = ctx._transformMatrix[0] || 1;
-        var wfB2 = ctx._transformMatrix[1] || 0;
-        var wfC2 = ctx._transformMatrix[2] || 0;
-        var wfD2 = ctx._transformMatrix[3] || 1;
-        var wfTx = ctx._transformMatrix[4] || 0;
-        var wfTy = ctx._transformMatrix[5] || 0;
-        var wfScaleX = Math.sqrt((wfA2 * wfA2) + (wfB2 * wfB2));
-        var wfScaleY = Math.sqrt((wfD2 * wfD2) + (wfC2 * wfC2));
-        var wfHeight = fontSize / fontSizeScale;
+        var wfA2, wfB2, wfC2, wfD2, wfTx, wfTy, wfScaleX, wfScaleY, wfHeight;
+        var wfChar, wfRotated;
+        var wfMetrics = (PDFJS.VIEWER_METRICS || PDFJS.PDF_METRICS);
+
+        if (wfMetrics) {
+          wfA2 = ctx._transformMatrix[0] || 1;
+          wfB2 = ctx._transformMatrix[1] || 0;
+          wfC2 = ctx._transformMatrix[2] || 0;
+          wfD2 = ctx._transformMatrix[3] || 1;
+          wfTx = ctx._transformMatrix[4] || 0;
+          wfTy = ctx._transformMatrix[5] || 0;
+          wfScaleX = Math.sqrt((wfA2 * wfA2) + (wfB2 * wfB2));
+          wfScaleY = Math.sqrt((wfD2 * wfD2) + (wfC2 * wfC2));
+          wfHeight = fontSize / fontSizeScale;
+          wfRotated = wfB2 !== 0 || wfC2 !== 0;
+        }
         // </WF>
 
+        var x = 0;
         for (var i = 0; i < glyphsLength; ++i) {
           var glyph = glyphs[i];
           if (glyph === null) {
@@ -1074,9 +1081,9 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
             // WF ----- TEXT METRICS
             // TODO: add accents support
             // TODO: add ascent and descent support
-            // only create metrics if the flag is set
-            if (PDFJS.VIEWER_METRICS || PDFJS.PDF_METRICS) {
-              var wfChar = character;
+            // Only create metrics if enabled and the text is horizontal
+            if (wfMetrics && !vertical && !wfRotated) {
+              wfChar = character;
               if (!wfChar && accent) {
                 wfChar = accent.fontChar;
               }
