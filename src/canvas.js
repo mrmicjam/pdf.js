@@ -962,6 +962,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var canvasWidth = 0.0;
       var vertical = font.vertical;
       var defaultVMetrics = font.defaultVMetrics;
+      var metricsWF = {}; // WF
 
       // Type3 fonts - each glyph is a "mini-PDF"
       if (font.coded) {
@@ -1026,21 +1027,21 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         ctx.lineWidth = lineWidth;
 
         // <WF>
-        var wfA2, wfB2, wfC2, wfD2, wfTx, wfTy, wfScaleX, wfScaleY, wfHeight;
-        var wfChar, wfRotated;
-        var wfMetrics = (PDFJS.VIEWER_METRICS || PDFJS.PDF_METRICS);
+        metricsWF.enabled = PDFJS.VIEWER_METRICS || PDFJS.PDF_METRICS;
 
-        if (wfMetrics) {
-          wfA2 = ctx._transformMatrix[0] || 1;
-          wfB2 = ctx._transformMatrix[1] || 0;
-          wfC2 = ctx._transformMatrix[2] || 0;
-          wfD2 = ctx._transformMatrix[3] || 1;
-          wfTx = ctx._transformMatrix[4] || 0;
-          wfTy = ctx._transformMatrix[5] || 0;
-          wfScaleX = Math.sqrt((wfA2 * wfA2) + (wfB2 * wfB2));
-          wfScaleY = Math.sqrt((wfD2 * wfD2) + (wfC2 * wfC2));
-          wfHeight = fontSize / fontSizeScale;
-          wfRotated = wfB2 !== 0 || wfC2 !== 0;
+        if (metricsWF.enabled) {
+          metricsWF.a2 = ctx._transformMatrix[0] || 1;
+          metricsWF.b2 = ctx._transformMatrix[1] || 0;
+          metricsWF.c2 = ctx._transformMatrix[2] || 0;
+          metricsWF.d2 = ctx._transformMatrix[3] || 1;
+          metricsWF.tx = ctx._transformMatrix[4] || 0;
+          metricsWF.ty = ctx._transformMatrix[5] || 0;
+          metricsWF.scaleX = Math.sqrt((metricsWF.a2 * metricsWF.a2) +
+                                       (metricsWF.b2 * metricsWF.b2));
+          metricsWF.scaleY = Math.sqrt((metricsWF.d2 * metricsWF.d2) +
+                                       (metricsWF.c2 * metricsWF.c2));
+          metricsWF.height = fontSize / fontSizeScale;
+          metricsWF.rotated = metricsWF.b2 !== 0 || metricsWF.c2 !== 0;
         }
         // </WF>
 
@@ -1082,17 +1083,17 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
             // TODO: add accents support
             // TODO: add ascent and descent support
             // Only create metrics if enabled and the text is horizontal
-            if (wfMetrics && !vertical && !wfRotated) {
-              wfChar = character;
-              if (!wfChar && accent) {
-                wfChar = accent.fontChar;
+            if (metricsWF.enabled && !vertical && !metricsWF.rotated) {
+              metricsWF.char = character;
+              if (!metricsWF.char && accent) {
+                metricsWF.char = accent.fontChar;
               }
               PDFJS.textMetrics.addCharAtPos(
-                wfChar,
-                wfTx + (scaledX * wfScaleX),
-                wfTy + (scaledY * wfScaleY),
-                (charWidth * wfScaleX),
-                ((wfHeight * wfScaleY) || ctx.font));
+                metricsWF.char,
+                metricsWF.tx + (scaledX * metricsWF.scaleX),
+                metricsWF.ty + (scaledY * metricsWF.scaleY),
+                (charWidth * metricsWF.scaleX),
+                ((metricsWF.height * metricsWF.scaleY) || ctx.font));
             }
             // END WF
             switch (textRenderingMode) {
