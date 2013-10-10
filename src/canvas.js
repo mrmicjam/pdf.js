@@ -610,7 +610,11 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
             this.ctx.globalAlpha = state[1];
             break;
           case 'BM':
-            if (value && value.name && (value.name !== 'Normal')) {
+            // WF
+            // treat 'compatible' the same as 'normal'
+            if (value && value.name && (value.name !== 'Normal') &&
+                (value.name !== 'Compatible')) {
+            // END WF
               var mode = value.name.replace(/([A-Z])/g,
                 function(c) {
                   return '-' + c.toLowerCase();
