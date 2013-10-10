@@ -1041,7 +1041,8 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
           metricsWF.scaleY = Math.sqrt((metricsWF.d2 * metricsWF.d2) +
                                        (metricsWF.c2 * metricsWF.c2));
           metricsWF.height = fontSize / fontSizeScale;
-          metricsWF.rotated = metricsWF.b2 !== 0; // Allow x-axis shear
+          // Allow Y-axis shear to simulate italic text
+          metricsWF.rotated = metricsWF.b2 !== 0;
         }
         // </WF>
 
