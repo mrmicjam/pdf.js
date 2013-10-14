@@ -573,10 +573,12 @@ var FontLoader = {
 
       // Add the font to the DOM only once or skip if the font
       // is already loaded.
-      if (font.attached || font.loading === false) {
-        continue;
-      }
-      font.attached = true;
+      // HYDRA: We want to skip this since we need to have every font for
+      // every page it's own (though we only save it once)
+      //if (font.attached || font.loading === false) {
+      //  continue;
+      //}
+      //font.attached = true;
       var rule = font.bindDOM();
       //if (rule) {
       //  rules.push(rule);
@@ -4508,7 +4510,7 @@ var Font = (function FontClosure() {
         console.log("the font data was none after doing bytes to String");
         return null;
       }
-      
+
       var fontDef = PDFJS.saveFont(this, PDFJS.font_url, this.name, data);
       fontDef.testChar = this.testChar;
 
