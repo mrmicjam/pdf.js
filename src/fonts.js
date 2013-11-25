@@ -2450,12 +2450,7 @@ var Font = (function FontClosure() {
       // to be used with the canvas.font.
       var fontName = name.replace(/[,_]/g, '-');
 
-      // WF
-      // If there is no font embedded, then fallback.
-      // PDF's should always be created with all fonts embedded.
-      PDFJS.errorHandler.addError('NonEmbeddedFont');
-      fontName = fontName;//stdFontMap[fontName] || nonStdFontMap[fontName] || fontName;
-      // END WF
+      fontName = stdFontMap[fontName] || nonStdFontMap[fontName] || fontName;
 
       this.bold = (fontName.search(/bold/gi) != -1);
       this.italic = (fontName.search(/oblique/gi) != -1) ||
@@ -2464,6 +2459,12 @@ var Font = (function FontClosure() {
       // Use 'name' instead of 'fontName' here because the original
       // name ArialBlack for example will be replaced by Helvetica.
       this.black = (name.search(/Black/g) != -1);
+
+      // WF
+      // If there is no font embedded, then fallback.
+      // PDF's should always be created with all fonts embedded.
+      PDFJS.errorHandler.addError('NonEmbeddedFont');
+      // END WF
 
       // WF
       PDFJS.updateFontFallback(fontName, this);
