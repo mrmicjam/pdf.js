@@ -2450,7 +2450,12 @@ var Font = (function FontClosure() {
       // to be used with the canvas.font.
       var fontName = name.replace(/[,_]/g, '-');
 
-      fontName = stdFontMap[fontName] || nonStdFontMap[fontName] || fontName;
+      // WF
+      // If there is no font embedded, then fallback.
+      // PDF's should always be created with all fonts embedded.
+      PDFJS.errorHandler.addError('NonEmbeddedFont');
+      fontName = fontName;//stdFontMap[fontName] || nonStdFontMap[fontName] || fontName;
+      // END WF
 
       this.bold = (fontName.search(/bold/gi) != -1);
       this.italic = (fontName.search(/oblique/gi) != -1) ||
