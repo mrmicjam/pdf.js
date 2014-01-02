@@ -4499,19 +4499,18 @@ var Font = (function FontClosure() {
     },
 
     bindDOM: function Font_bindDOM() {
-      if (!this.data)
-        return null;
+      var fontDef = {};
+      var data;
+      if (!!this.data) {
+        data = bytesToString(this.data);
 
-      var fs = require('fs');
-
-      var data = bytesToString(this.data);
-
-      if (data == null) {
-        console.log("the font data was none after doing bytes to String");
-        return null;
+        if (data == null) {
+          console.log("the font data was none after doing bytes to String");
+          return null;
+        }
       }
 
-      var fontDef = PDFJS.saveFont(this, PDFJS.font_url, this.name, data);
+      fontDef = PDFJS.saveFont(this, PDFJS.font_url, this.name, data);
       fontDef.testChar = this.testChar;
 
       // HC-576
