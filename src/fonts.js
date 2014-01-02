@@ -2461,12 +2461,6 @@ var Font = (function FontClosure() {
       this.black = (name.search(/Black/g) != -1);
 
       // WF
-      // If there is no font embedded, then fallback.
-      // PDF's should always be created with all fonts embedded.
-      PDFJS.errorHandler.addError('NonEmbeddedFont');
-      // END WF
-
-      // WF
       PDFJS.updateFontFallback(fontName, this);
       // END WF
 
