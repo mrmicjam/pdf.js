@@ -1,32 +1,31 @@
 /* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab: */
+/* globals PDFJS, expect, it, describe, Promise, combineUrl, waitsFor, runs */
 
 'use strict';
 
 describe('api', function() {
   // TODO run with worker enabled
-  PDFJS.disableWorker = true;
   var basicApiUrl = combineUrl(window.location.href, '../pdfs/basicapi.pdf');
-  function waitsForPromise(promise) {
-    waitsFor(function() {
-      return promise.isResolved || promise.isRejected;
-    }, 4000);
-  }
-  function expectAfterPromise(promise, successCallback) {
-    waitsForPromise(promise);
-    runs(function() {
-      promise.then(successCallback,
-      function(error, e) {
-        // Shouldn't get here.
-        expect(false).toEqual(true);
-      });
+  function waitsForPromise(promise, successCallback) {
+    var data;
+    promise.then(function(val) {
+      data = val;
+      successCallback(data);
+    },
+    function(error) {
+      // Shouldn't get here.
+      expect(false).toEqual(true);
     });
+    waitsFor(function() {
+      return data !== undefined;
+    }, 20000);
   }
   describe('PDFJS', function() {
     describe('getDocument', function() {
       it('creates pdf doc from URL', function() {
         var promise = PDFJS.getDocument(basicApiUrl);
-        expectAfterPromise(promise, function(data) {
+        waitsForPromise(promise, function(data) {
           expect(true).toEqual(true);
         });
       });
@@ -39,10 +38,9 @@ describe('api', function() {
   });
   describe('PDFDocument', function() {
     var promise = PDFJS.getDocument(basicApiUrl);
-    waitsForPromise(promise);
     var doc;
-    runs(function() {
-      promise.then(function(data) { doc = data; });
+    waitsForPromise(promise, function(data) {
+      doc = data;
     });
     it('gets number of pages', function() {
       expect(doc.numPages).toEqual(3);
@@ -52,19 +50,19 @@ describe('api', function() {
     });
     it('gets page', function() {
       var promise = doc.getPage(1);
-      expectAfterPromise(promise, function(data) {
+      waitsForPromise(promise, function(data) {
         expect(true).toEqual(true);
       });
     });
     it('gets destinations', function() {
       var promise = doc.getDestinations();
-      expectAfterPromise(promise, function(data) {
+      waitsForPromise(promise, function(data) {
         // TODO this seems to be broken for the test pdf
       });
     });
     it('gets outline', function() {
       var promise = doc.getOutline();
-      expectAfterPromise(promise, function(outline) {
+      waitsForPromise(promise, function(outline) {
         // Two top level entries.
         expect(outline.length).toEqual(2);
         // Make sure some basic attributes are set.
@@ -75,26 +73,27 @@ describe('api', function() {
     });
     it('gets metadata', function() {
       var promise = doc.getMetadata();
-      expectAfterPromise(promise, function(metadata) {
+      waitsForPromise(promise, function(metadata) {
         expect(metadata.info['Title']).toEqual('Basic API Test');
         expect(metadata.metadata.get('dc:title')).toEqual('Basic API Test');
       });
     });
   });
   describe('Page', function() {
-    var promise = new Promise();
+    var resolvePromise;
+    var promise = new Promise(function (resolve) {
+      resolvePromise = resolve;
+    });
     PDFJS.getDocument(basicApiUrl).then(function(doc) {
       doc.getPage(1).then(function(data) {
-        promise.resolve(data);
+        resolvePromise(data);
       });
     });
-    waitsForPromise(promise);
     var page;
-    runs(function() {
-      promise.then(function(data) {
-        page = data;
-      });
+    waitsForPromise(promise, function(data) {
+      page = data;
     });
+
     it('gets ref', function() {
       expect(page.ref).toEqual({num: 15, gen: 0});
     });
