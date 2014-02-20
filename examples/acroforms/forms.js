@@ -58,7 +58,7 @@ function setupForm(div, content, viewport) {
   content.getAnnotations().then(function(items) {
     for (var i = 0; i < items.length; i++) {
       var item = items[i];
-      switch (item.type) {
+      switch (item.subtype) {
         case 'Widget':
           if (item.fieldType != 'Tx' && item.fieldType != 'Btn' &&
               item.fieldType != 'Ch')
@@ -125,8 +125,11 @@ function renderPage(div, pdf, pageNumber, callback) {
       canvasContext: context,
       viewport: viewport
     };
-    page.render(renderContext).then(callback);
+    try{
+      page.render(renderContext).then(callback);
+    } catch(err){}
 
+    alert("here!");
     // Prepare and populate form elements layer
     var formDiv = document.createElement('div');
     pageDivHolder.appendChild(formDiv);
